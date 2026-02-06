@@ -1,0 +1,17 @@
+{
+  "originX": -10,
+  "originY": -10,
+  "gridWidth": 21,
+  "gridHeight": 21,
+  "tileSize": 512,
+  "maxZoom": 4,
+  "imageWidth": 10752,
+  "imageHeight": 10752,
+  "format": "webp",
+  "generated": "2026-01-26T20:22:56.487079+00:00",
+  "appDefaults": {
+    "x": 5376,
+    "y": 5376,
+    "zoom": 4.89
+  }
+}

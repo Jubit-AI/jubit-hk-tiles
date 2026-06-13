@@ -36,6 +36,11 @@ const EXPORT_MODE = urlParams.get("export") === "true";
 // style=soft → deterministic soft-stylise post-process (no AI). Default off =
 // RAW render (the input the optional AI restyle would consume). See softStylise.js.
 const STYLE_MODE = urlParams.get("style") === "soft";
+// Optional soft-stylise tuning (only used when STYLE_MODE). pixel = mosaic block
+// in screen px (bigger = chunkier pixel-art read); palette = 0..1 snap strength
+// to the 15-colour Yok palette. Null = use the shader defaults (4 / 0.85).
+const PIXEL_SIZE = urlParams.has("pixel") ? parseFloat(urlParams.get("pixel")) : null;
+const PALETTE_MIX = urlParams.has("palette") ? parseFloat(urlParams.get("palette")) : null;
 
 // Configuration with URL param overrides
 const CANVAS_WIDTH = parseInt(urlParams.get("width")) || view.width_px;
@@ -243,7 +248,14 @@ function init() {
     composer = createSoftStyliseComposer(
       renderer, scene, transition.camera, CANVAS_WIDTH, CANVAS_HEIGHT
     );
-    console.log("🎨 soft-stylise post-process enabled (style=soft)");
+    // passes[1] is the SoftStyliseShader pass; apply optional URL overrides.
+    const styliseUniforms = composer.passes[1].uniforms;
+    if (PIXEL_SIZE !== null) styliseUniforms.uPixelSize.value = PIXEL_SIZE;
+    if (PALETTE_MIX !== null) styliseUniforms.uPaletteMix.value = PALETTE_MIX;
+    console.log(
+      `🎨 soft-stylise enabled (pixel=${styliseUniforms.uPixelSize.value}, ` +
+      `palette=${styliseUniforms.uPaletteMix.value})`
+    );
   }
 
   // Add UI instructions

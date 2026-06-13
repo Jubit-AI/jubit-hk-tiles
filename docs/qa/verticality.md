@@ -60,4 +60,10 @@ Render Central with **Option A** (per-tile camera angle, height-variance-driven)
 
 ## Decision log (update as Week 2 progresses)
 
-_Empty. Populate after Week 2 pilot renders._
+**2026-06-13 — data-half findings (pre-render).** Confirmed against the live API before any render:
+- HK building tiles use **`box` bounding volumes** in ECEF (center + 3 half-axis vectors), with a `transform` on the root tile, `REPLACE` refinement, 44 root children. This matters for the camera work two ways:
+  1. **Cropping**: we can't filter to a district with a cheap lat/lng test (the volumes aren't geographic `region`s). Decode the box + apply the root transform → ECEF, then test against the district bbox; or crop via the camera frustum at render time.
+  2. **Verticality**: the box half-axes give us per-tile height extent directly (the vertical half-axis magnitude). That's exactly the signal Option A needs — we can drive the per-tile camera elevation off the box's vertical extent without a separate height-variance pass. Bonus: Option A got cheaper.
+- Real `b3dm` payloads confirmed (textured mesh, ~150 KB/tile). The renderer will consume `b3dm`, not `glb` directly — `3d-tiles-renderer` handles `b3dm` natively, so no format conversion needed.
+
+_Render-angle decision still pending the first Central render._

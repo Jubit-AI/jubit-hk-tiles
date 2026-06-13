@@ -66,7 +66,7 @@ const SoftStyliseShader = {
       if (i==11) return vec3(0.486,0.612,0.557); // jade        7C9C8E
       if (i==12) return vec3(0.078,0.722,0.651); // JUBIT TEAL  14B8A6 (accent)
       if (i==13) return vec3(0.925,0.282,0.600); // JUBIT PINK  EC4899 (accent)
-      return            vec3(0.902,0.224,0.275); // cinnabar    E63946 (accent)
+      return            vec3(0.714,0.278,0.204); // cinnabar    B64734 (accent)
     }
 
     // Snap to nearest Yok colour. Accents (12-14) get a penalty scaled by how

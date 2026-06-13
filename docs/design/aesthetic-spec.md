@@ -31,11 +31,13 @@ This welds the city tiles to the Codex character line: both paint from the same 
 
 **Accent (8%)** — Jubit brand, the fingerprint the LoRA learns to *inject* (~5–10% of pixels, placed not fielded): teal `#14B8A6`, pink `#EC4899`.
 
-**Punctuation (2%)** — max 1–2/tile: cinnabar `#E63946` (tram/lantern/one sign), jade `#7C9C8E` (Star Ferry/piers).
+**Punctuation (2%)** — max 1–2/tile: cinnabar `#B64734` (tram/lantern/one sign), jade `#7C9C8E` (Star Ferry/piers). *(Cinnabar locked to Codex's authored Yok token `#B64734` — `yok.ts traditional.palette[2]` + `apps/web cinnabar_jade_gold.swatches[2]` + brand CSS `--cinnabar`. The earlier `#E63946` was Basquiat's "arterial red", not Yok cinnabar.)*
 
 **Sky/water:** day sky warm wash `#EFE7D8`→`#E3D6BE` (25–40% negative space, no hard gradient); harbour water jade-grey `#A8B8A3` + ink ripples `#1F1A17` @12%, gold reflection `#C7A25B` only at the waterline.
 
-**HK neon (reserve):** day = dormant desaturated sign shapes (−60% sat); night = ignited — hot pink-orange `#FF5E7A`, electric yellow `#FFE600`, sky-cyan `#00E5FF`, magenta `#FF0080`, shimmer green `#3FFF7A` (rare). Night is a **re-light of the same tile**, never a new composition.
+**HK neon (reserve):** day = dormant desaturated sign shapes (−60% sat); night = ignited — hot pink-orange `#FF5E7A`, electric yellow `#FFE600`, sky-cyan `#00E5FF`, magenta `#FF0080`, shimmer green `#3FFF7A` (rare). Night is a **re-light of the same tile**, never a new composition. (Shimmer green `#3FFF7A` is the exact Codex `arcane.ts ZAUN_PALETTE[0]` — the night/neon family is inherited from Codex's Zaun palette.)
+
+**Codex-token fidelity (verified 2026-06-14).** The accent + structure swatches are hex-locked to the *real* tokens the Codex agent authored in `jubuddy-game`, not approximations: teal `#14B8A6` / pink `#EC4899` / gold `#C7A25B` = `packages/prompt-themes/src/themes/yok.ts` jubit family; cream `#F0E2C9` / copper `#C8A36A` = `arcane.ts PILTOVER_PALETTE`; jade `#7C9C8E` / water-jade `#A8B8A3` = `apps/web …/yok.ts` swatches; cinnabar `#B64734` = Yok `traditional` family. The rice-paper `#F6F1E8` substrate is the exact mascot/character paper, so HK tiles and the jubuddy character line literally share one sheet. The **concrete ramp** (`#C9C2B6`/`#A89F90`/`#8A8378`), **off-white** `#EFE7D8`, and **sky** `#E3D6BE` are deliberate HK-original extensions (no Codex equivalent — HK needs a concrete-massing base the character palette doesn't carry).
 
 ## 2. Texture / edge — the soft-stylised lock
 
@@ -99,7 +101,7 @@ Each tile = one dominant read; all obey 70/20/8/2 + 25–40% negative space + ri
 | **Harbour** | water plane + one pier | ivory water + ink ripples; junk/skyline as distant edge motif; gold reflection at waterline only; big negative space |
 | **Neon canyon** | the value-contrast canyon | deep dark gaps + bright lit upper faces; neon = single soft-graffiti glow line (teal/pink), NOT a flood; depth via value; day = dormant |
 | **Skybridge** | calm horizontal deck | chunky read-first silhouette; copper railings; deck kept to canvas edges |
-| **Tram/ferry** | the single charming vehicle | soft plush vehicle-keepsake; ding-ding cinnabar `#E63946`, Star Ferry jade `#7C9C8E`; strong 3/4 silhouette + wake/track sweep |
+| **Tram/ferry** | the single charming vehicle | soft plush vehicle-keepsake; ding-ding cinnabar `#B64734`, Star Ferry jade `#7C9C8E`; strong 3/4 silhouette + wake/track sweep |
 | **Island pier** | stilts + gangway + lantern string | wood/earth textures (tea-brown `#8D6B4D`, kraft grain); paper-lantern string as warm punctuation |
 | **Transit concourse** | repeating column/turnstile rhythm | metal vocabulary softened to designer-toy matte; quiet center, readable lane |
 

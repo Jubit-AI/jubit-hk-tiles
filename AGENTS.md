@@ -1,6 +1,12 @@
-# Isometric NYC
+# jubit-hk-tiles
 
-This repo contains the code for generating an isometric pixel art view of New York City using the latest and greatest AI tools available.
+This repo generates **soft-stylised isometric tiles of Hong Kong** from the Lands Department's 3D open data. It is a fork of [`cannoneyed/isometric-nyc`](https://github.com/cannoneyed/isometric-nyc), retargeted from New York City to Hong Kong.
+
+> **Governance + project rules**: see [`CLAUDE.md`](./CLAUDE.md) — it carries the Jubit 12-Rule Template and the HK-adaptation context. The per-week status lives in [`docs/HK-ADAPTATION-PLAN.md`](./docs/HK-ADAPTATION-PLAN.md); licensing rules in [`docs/legal/attribution.md`](./docs/legal/attribution.md); the remaining NYC→HK retargeting map in [`docs/research/nyc-to-hk-coupling-checklist.md`](./docs/research/nyc-to-hk-coupling-checklist.md).
+>
+> **Naming note**: the Python package dir is still `src/isometric_nyc/` — a deferred rename to `src/isometric_hk/` (Week 7, atomic commit) per the coupling checklist. Until then, imports reference `isometric_nyc` as shown below.
+
+The tech-stack / tooling guidance below is unchanged from upstream and still accurate (uv / pytest / ruff).
 
 ## Technology Stack
 

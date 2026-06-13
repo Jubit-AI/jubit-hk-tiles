@@ -28,7 +28,8 @@ const SoftStyliseShader = {
     uWarm: { value: 1.0 },          // warm-grade strength
     uGrain: { value: 1.0 },         // rice-paper grain strength
     uEdge: { value: 1.0 },          // soft-graffiti contour strength
-    uDesat: { value: 1.0 },         // pull toward the 24-40 colour discipline
+    uPixelSize: { value: 4.0 },     // mosaic block in screen px (pixel-art read)
+    uPaletteMix: { value: 0.85 },   // 0=off, 1=full snap to the 15-colour Yok palette
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -40,45 +41,80 @@ const SoftStyliseShader = {
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
     uniform vec2 uResolution;
-    uniform float uCelBands, uWarm, uGrain, uEdge, uDesat;
+    uniform float uCelBands, uWarm, uGrain, uEdge, uPixelSize, uPaletteMix;
     varying vec2 vUv;
 
     float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
     float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float chroma(vec3 c) { return max(max(c.r,c.g),c.b) - min(min(c.r,c.g),c.b); }
+
+    // The 15-colour Yok palette (aesthetic-spec §1). Indices 12-14 are the
+    // high-chroma accents (teal/pink/cinnabar) — chroma-gated below so the
+    // concrete city never mis-snaps to them.
+    vec3 yok(int i) {
+      if (i==0)  return vec3(0.965,0.945,0.910); // rice-paper  F6F1E8
+      if (i==1)  return vec3(0.937,0.906,0.847); // off-white   EFE7D8
+      if (i==2)  return vec3(0.788,0.761,0.714); // concrete lt C9C2B6
+      if (i==3)  return vec3(0.659,0.624,0.565); // concrete md A89F90
+      if (i==4)  return vec3(0.541,0.514,0.471); // concrete sh 8A8378
+      if (i==5)  return vec3(0.122,0.102,0.090); // ink         1F1A17
+      if (i==6)  return vec3(0.941,0.886,0.788); // cream       F0E2C9
+      if (i==7)  return vec3(0.784,0.639,0.416); // copper      C8A36A
+      if (i==8)  return vec3(0.780,0.635,0.357); // antique gold C7A25B
+      if (i==9)  return vec3(0.890,0.839,0.745); // sky         E3D6BE
+      if (i==10) return vec3(0.659,0.722,0.639); // water jade  A8B8A3
+      if (i==11) return vec3(0.486,0.612,0.557); // jade        7C9C8E
+      if (i==12) return vec3(0.078,0.722,0.651); // JUBIT TEAL  14B8A6 (accent)
+      if (i==13) return vec3(0.925,0.282,0.600); // JUBIT PINK  EC4899 (accent)
+      return            vec3(0.902,0.224,0.275); // cinnabar    E63946 (accent)
+    }
+
+    // Snap to nearest Yok colour. Accents (12-14) get a penalty scaled by how
+    // GREY the source is, so only genuinely-colourful pixels reach teal/pink.
+    vec3 snapYok(vec3 c) {
+      float srcCh = chroma(c);
+      float best = 1e9; vec3 bestc = c;
+      for (int i = 0; i < 15; i++) {
+        vec3 p = yok(i);
+        float d = distance(c, p);
+        if (i >= 12) d += (1.0 - srcCh) * 0.6; // chroma-gate the brand accents
+        if (d < best) { best = d; bestc = p; }
+      }
+      return bestc;
+    }
 
     void main() {
-      vec4 src = texture2D(tDiffuse, vUv);
+      // 0. Pixelate — sample on a mosaic grid for the pixel-art read.
+      vec2 grid = uResolution / max(uPixelSize, 1.0);
+      vec2 puv = (floor(vUv * grid) + 0.5) / grid;
+      vec4 src = texture2D(tDiffuse, puv);
       vec3 col = src.rgb;
       float lum = luma(col);
 
-      // 1. Cel posterize — band luminance into flat faces, but LIFT into a
-      // warm-concrete range so shadow faces read as concrete (#8A8378), never
-      // pure black (aesthetic-spec §1A base palette: light→mid→shadow grey).
+      // 1. Cel posterize, lifted into the warm-concrete range (no black crush).
+      // Floor 0.33 keeps shadow faces as deep concrete (not black) while giving
+      // the massing more tonal punch than a 0.40 floor (which washed pale).
       float bands = uCelBands;
-      float banded = floor(lum * bands + 0.5) / bands;   // 0..1 in steps
-      float lifted = 0.40 + 0.60 * banded;               // floor at 0.40 — no black
+      float banded = floor(lum * bands + 0.5) / bands;
+      float lifted = 0.33 + 0.67 * banded;
       col *= lifted / max(lum, 1e-3);
 
-      // 2. Warm rice-paper grade (aesthetic-spec §1A/§3 warm key)
-      vec3 warm = mix(vec3(1.0), vec3(1.06, 1.01, 0.92), uWarm);
-      col *= warm;
+      // 2. Warm rice-paper grade.
+      col *= mix(vec3(1.0), vec3(1.06, 1.01, 0.92), uWarm);
 
-      // 3. Soft-graffiti contour — gently darken where luminance steps (one
-      // soft ink line, not heavy outline). Reduced from 0.4 → 0.18 so it reads
-      // as a contour hint, not noir.
-      vec2 px = 1.0 / uResolution;
-      float lr = luma(texture2D(tDiffuse, vUv + vec2(px.x, 0.0)).rgb);
-      float ld = luma(texture2D(tDiffuse, vUv + vec2(0.0, px.y)).rgb);
+      // 3. Soft contour — tap at the mosaic step so the ink line is pixel-aligned.
+      vec2 step = uPixelSize / uResolution;
+      float lr = luma(texture2D(tDiffuse, puv + vec2(step.x, 0.0)).rgb);
+      float ld = luma(texture2D(tDiffuse, puv + vec2(0.0, step.y)).rgb);
       float edge = clamp((abs(lum - lr) + abs(lum - ld)) * 3.0, 0.0, 1.0);
-      col *= 1.0 - 0.18 * edge * uEdge;
+      col *= 1.0 - 0.24 * edge * uEdge;
 
-      // 4. Rice-paper grain — subtle multiplicative fibre, screen-keyed (stable)
-      float g = hash(floor(vUv * uResolution / 2.0));
-      col *= mix(1.0, 0.97 + 0.03 * g, uGrain);
+      // 4. Rice-paper grain, per mosaic cell (stable).
+      float g = hash(floor(vUv * grid));
+      col *= mix(1.0, 0.96 + 0.04 * g, uGrain);
 
-      // 5. Pull toward limited-palette discipline (slight desaturate)
-      float l2 = luma(col);
-      col = mix(col, mix(vec3(l2), col, 0.88), uDesat);
+      // 5. Snap to the Yok palette (limited-palette = pixel-art + Jubit colours).
+      col = mix(col, snapYok(clamp(col, 0.0, 1.0)), uPaletteMix);
 
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), src.a);
     }

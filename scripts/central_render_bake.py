@@ -126,6 +126,9 @@ def main() -> int:
     parser.add_argument("--disable-web-security", action="store_true",
                         help="add Chromium flag if data.map.gov.hk CORS blocks the browser fetch")
     parser.add_argument("--tile-timeout", type=int, default=60000, help="ms to wait for TILES_LOADED")
+    parser.add_argument("--settle-ms", type=int, default=3500,
+                        help="ms to wait after TILES_LOADED for KTX2 textures to transcode "
+                             "before screenshot (avoids untextured whitebox capture)")
     parser.add_argument("--azimuth", type=float, default=AZ,
                         help=f"camera azimuth deg (default {AZ})")
     parser.add_argument("--elevation", type=float, default=EL,
@@ -135,6 +138,12 @@ def main() -> int:
                         help="soft (default) = deterministic soft-stylise post-process, the "
                              "shippable look, no AI; raw = unstyled render (the input the "
                              "optional AI restyle would consume)")
+    parser.add_argument("--pixel", type=float, default=None,
+                        help="soft only: mosaic block in screen px (chunkier = more pixel-art; "
+                             "default 4). e.g. --pixel 8 for a strong pixel read")
+    parser.add_argument("--palette", type=float, default=None,
+                        help="soft only: 0..1 snap strength to the 15-colour Yok palette "
+                             "(default 0.85; 1.0 = hard hex-lock)")
     args = parser.parse_args()
     az, el = args.azimuth, args.elevation
 
@@ -166,6 +175,10 @@ def main() -> int:
                 }
                 if args.style == "soft":
                     params["style"] = "soft"
+                    if args.pixel is not None:
+                        params["pixel"] = args.pixel
+                    if args.palette is not None:
+                        params["palette"] = args.palette
                 q = urlencode(params)
                 ctx = browser.new_context(
                     viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
@@ -185,6 +198,10 @@ def main() -> int:
                 except Exception:
                     loaded = False
                     print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
+                # TILES_LOADED fires on geometry load, but KTX2/BasisU textures
+                # transcode asynchronously after that — screenshotting immediately
+                # catches untextured (whitebox) buildings. Settle so textures land.
+                page.wait_for_timeout(args.settle_ms)
                 out_path = out_dir / f"{label}.png"
                 page.screenshot(path=str(out_path))
                 size = out_path.stat().st_size

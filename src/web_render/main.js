@@ -21,6 +21,7 @@ import {
 } from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+import { createSoftStyliseComposer } from "./softStylise.js";
 
 import view from "../view.json";
 
@@ -32,6 +33,9 @@ console.log("HK API Key loaded:", API_KEY ? "Yes" : "No");
 
 const urlParams = new URLSearchParams(window.location.search);
 const EXPORT_MODE = urlParams.get("export") === "true";
+// style=soft → deterministic soft-stylise post-process (no AI). Default off =
+// RAW render (the input the optional AI restyle would consume). See softStylise.js.
+const STYLE_MODE = urlParams.get("style") === "soft";
 
 // Configuration with URL param overrides
 const CANVAS_WIDTH = parseInt(urlParams.get("width")) || view.width_px;
@@ -46,6 +50,7 @@ const VIEW_HEIGHT_METERS =
   parseFloat(urlParams.get("view_height")) || view.view_height_meters || 200;
 
 let scene, renderer, controls, tiles, transition;
+let composer = null; // soft-stylise post-process chain when STYLE_MODE
 let isOrthographic = true; // Start in orthographic (isometric) mode
 
 // Debounced camera info logging
@@ -230,6 +235,16 @@ function init() {
 
   // Add keyboard controls
   window.addEventListener("keydown", onKeyDown);
+
+  // Soft-stylise post-process chain (deterministic, no AI) when style=soft.
+  // Built with the current transition camera; the RenderPass camera is kept in
+  // sync each frame in animate() since the perspective/ortho camera can swap.
+  if (STYLE_MODE) {
+    composer = createSoftStyliseComposer(
+      renderer, scene, transition.camera, CANVAS_WIDTH, CANVAS_HEIGHT
+    );
+    console.log("🎨 soft-stylise post-process enabled (style=soft)");
+  }
 
   // Add UI instructions
   addUI();
@@ -487,5 +502,12 @@ function animate() {
   // Log camera state (debounced)
   logCameraState();
 
-  renderer.render(scene, camera);
+  if (composer) {
+    // Keep the RenderPass camera in sync (perspective↔ortho can swap), then
+    // render through the soft-stylise chain.
+    composer.passes[0].camera = camera;
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 }

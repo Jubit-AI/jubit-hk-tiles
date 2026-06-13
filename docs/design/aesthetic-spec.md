@@ -64,6 +64,16 @@ Surface verdict: **"flat illustration with a soft brush, painted on rice paper"*
 
 **elevation −26.565° (arctan 0.5, dimetric 2:1), azimuth −15° (constant for tileability), orthographic.** Chosen by visual A/B on dense Mong Kok AND independently by this workflow. Beats true-iso 35.264° for HK because the lower angle shows more tower **face** (where HK identity lives — windows/balconies/AC/light-bleed), occludes less in dense clusters, locks the SC2K nostalgia signal, and gives clean 2:1 grid-slicing. (Spec's ideal azimuth is 45° for exactly-3-faces; we use −15° matching the upstream renderer's convention — revisit if the 3-face read needs it.) **Same angle on every training image — mixed angles poison the LoRA.**
 
+## 4b. Deterministic shader path (IMPLEMENTED — "shaders now, AI later")
+
+The soft-stylised look is reached **deterministically, no AI/Modal**, via a Three.js post-process — because HK's textured `b3dm` input already carries real building texture (the reason isometric-nyc needed AI doesn't apply as hard here). This is the **shippable baseline**; the LoRA (`inference/train.py`) is optional A/B polish later.
+
+- `src/web_render/softStylise.js` — `EffectComposer` chain: cel posterize (lifted into the warm-concrete range, **no black crush**) + warm grade + soft-graffiti contour (luminance-step Sobel, gentle) + rice-paper grain + slight desaturate toward the limited-palette discipline.
+- Enabled by `style=soft` URL param; **`scripts/central_render_bake.py --style soft` is the default**. `--style raw` emits the unstyled render = the input the optional AI restyle would consume (both paths from one renderer).
+- Tuned on dense Mong Kok: shadow floor lifted to 0.40 (concrete, not black), contour 0.18 (hint, not noir). Result reads as warm painted SC2000-on-rice-paper.
+- **Still deterministic** (grain keyed off screen position, not time) → identical re-renders, required for tileability.
+- Gaps vs the full spec (candidates for the AI pass or a palette-LUT upgrade): explicit Jubit teal/pink 8% accent *injection*, hard hex-lock to the exact palette, the day↔night neon axis. The baseline warm-cel-paper look is achieved.
+
 ## 5. The 40-pair training rubric (grades every "after" image)
 
 1. **Projection** — dimetric 2:1, identical angle every image, 3 faces, front never shown.

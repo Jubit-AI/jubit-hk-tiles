@@ -4,6 +4,8 @@
 
 **Aesthetic — LOCKED**: **soft stylised isometric** (not crisp pixel art). Decision recorded in the plan's FINAL research update #3. One-way door — once the 40 pairs enforce this look, retraining to crisp pixel means re-authoring the set.
 
+> **📐 CANONICAL aesthetic + grading rubric → [`docs/design/aesthetic-spec.md`](../../docs/design/aesthetic-spec.md)** ("Soft-Stylised Dimetric HK"). That spec — synthesized from the jubuddy-game Codex + Pictorial Book + GPT-image DNA — is authoritative: exact palette hexes (70/20/8/2 budget, Jubit teal/pink accents), the soft-stylised edge/texture lock, the dimetric 26.565° camera, the tuned warm lighting, the 7-attribute grading rubric every "after" image scores on, and the per-motif treatments (harbour / neon canyon / skybridge / tram-ferry / island pier / transit concourse). The buckets + workflow below remain valid; grade against the spec.
+
 ## Why soft-stylised (the locked rationale)
 
 - **Harmonizes with existing Jubit anime/kawaii character sprites** — the game and dseek surfaces show these tiles *behind/around* hand-drawn anime characters. A painterly soft-iso ground reads as one world; hard pixel-art would read as two games stapled together.

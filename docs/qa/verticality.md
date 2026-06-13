@@ -71,3 +71,9 @@ Render Central with **Option A** (per-tile camera angle, height-variance-driven)
 - The constant angle gives clean tileability (no per-tile seams), which matters for the eventual seamless map (Output A).
 - **Option A (per-tile elevation from the box vertical half-axis) is deferred** to the full-territory pass, and only IF specific dense tiles (Mid-Levels / ICC / IFC) prove unacceptable. The `central_pilot_fetch.py` walk already exposes each tile's box; wiring `view_height` per-tile from `hz` is the upgrade path if needed.
 - `TARGET_HEIGHT=5` + `view_height=350` framed the buildings acceptably; harbour-edge tiles (SW/NE corners of the bbox) are correctly building-sparse, not a framing bug.
+
+**2026-06-13 — camera switched to SC2000 dimetric for HK density.** A/B test on dense Mong Kok: true-iso (-35.264°) vs SC2000 dimetric (-26.565°, classic 2:1 "military projection"). **Dimetric wins and is now the default** (`view.json` + bake `EL`). Independently confirmed by the styling-DNA workflow (it recommended 26.57° on aesthetic grounds — Rule 7 convergence). Why:
+- The flatter angle shows much more building *face*, so HK's taller/denser towers read as a dramatic vertical canyon — matches the "more + higher + crowded than NYC" intent and the SimCity-2000 reference.
+- True-iso read flatter/roof-heavy — wrong emphasis for HK.
+- Tradeoff: dimetric increases tower occlusion behind. Accepted for the map + hero backdrops (the dramatic skyline is the goal). `--azimuth`/`--elevation` CLI overrides added for per-bucket tuning if TD-board legibility ever needs the steeper angle.
+- Azimuth stays constant (-15°) for tileability.

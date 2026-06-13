@@ -38,7 +38,12 @@ PORT = 5174  # avoid clashing with a manually-run vite on 5173
 S, W, N, E = 22.273, 114.150, 22.290, 114.170
 COLS, ROWS = 5, 4  # 20 tiles
 VIEW_HEIGHT_M = 350.0  # ground footprint per tile (m); Central's tall massing
-AZ, EL = -15.0, -35.264  # constant azimuth (tileability) + true-iso elevation
+# Constant azimuth (tileability) + SC2000 dimetric elevation. -26.565° (the
+# classic 2:1 "military projection") shows more tower FACE than true-iso
+# (-35.264°), which better conveys HK's taller/denser verticality and is more
+# SimCity-2000-authentic. Chosen by visual A/B on dense Mong Kok. Override per
+# render with --elevation. See docs/qa/verticality.md.
+AZ, EL = -15.0, -26.565
 WIDTH = HEIGHT = 1024
 
 
@@ -121,7 +126,13 @@ def main() -> int:
     parser.add_argument("--disable-web-security", action="store_true",
                         help="add Chromium flag if data.map.gov.hk CORS blocks the browser fetch")
     parser.add_argument("--tile-timeout", type=int, default=60000, help="ms to wait for TILES_LOADED")
+    parser.add_argument("--azimuth", type=float, default=AZ,
+                        help=f"camera azimuth deg (default {AZ})")
+    parser.add_argument("--elevation", type=float, default=EL,
+                        help=f"camera elevation deg; true-iso={EL}, SC2000 dimetric=-26.565 "
+                             "(flatter = more tower-face, better for HK verticality)")
     args = parser.parse_args()
+    az, el = args.azimuth, args.elevation
 
     # Choose tile source: named locations or the uniform Central grid.
     if args.locations:
@@ -147,7 +158,7 @@ def main() -> int:
                 q = urlencode({
                     "export": "true", "lat": lat, "lon": lon,
                     "width": WIDTH, "height": HEIGHT,
-                    "azimuth": AZ, "elevation": EL, "view_height": view_h,
+                    "azimuth": az, "elevation": el, "view_height": view_h,
                 })
                 ctx = browser.new_context(
                     viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,

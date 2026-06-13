@@ -1,8 +1,11 @@
-# Gallery — Soft-Stylised Dimetric HK
+# Gallery — Yok-Iso HK: soft isometric parchment city
 
-Sample output of the deterministic (no-AI) soft-stylise pipeline, Yok-palette
-hex-locked to Codex's `jubuddy-game` tokens. All regenerable from live HK Lands
-Dept 3D open data — these PNGs are committed only as a visual reference.
+Sample output of the deterministic (no-AI) soft-stylise pipeline — the locked
+**"Yok-Iso HK: soft isometric parchment city"** style (`yok_iso_hk_soft_pictorial`):
+soft isometric diorama with pixel-CLEAN edges (NOT crunchy retro pixel-art),
+Yok-palette hex-locked to Codex's `jubuddy-game` tokens under a 70 parchment /
+20 ink / 6 teal-neon / 3 cinnabar / 1 gold budget. All regenerable from live HK
+Lands Dept 3D open data — these PNGs are committed only as a visual reference.
 
 | Image | What it shows |
 |---|---|

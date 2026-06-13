@@ -1,8 +1,12 @@
-# Aesthetic Spec — "Soft-Stylised Dimetric HK"
+# Aesthetic Spec — "Yok-Iso HK: soft isometric parchment city"
 
-**LOCKED** (2026-06-13, from the styling-DNA workflow that extracted jubuddy-game Codex + Pictorial Book + GPT-image DNA). Canonical target for: (a) the fine-tune training-set "after" images (`inference/training-set/`), and (b) the deterministic render camera/lighting (`src/web_render/`). Hex values are exact.
+**Style name (LOCKED 2026-06-14):** **Yok-Iso HK: soft isometric parchment city**. Manifest key: **`yok_iso_hk_soft_pictorial`**. (Supersedes the working title "Soft-Stylised Dimetric HK".)
 
-**One-line lock:** *a warm illustrated SimCity-2000 Hong Kong seen at dimetric 2:1 / 26.57°, three faces (top·left·right, front never shown), flat cel-style fills with a soft anti-aliased edge on visible rice-paper grain (never crisp pixel art), Jubit teal/pink as engineered hero accents under a 70/20/8/2 budget, soft AO in the canyon creases and flat fills on the faces, day-primary with a day↔night re-light axis — harmonized with the plush folklore characters by shared paper, shared light, shared warmth, and a strict saturation hierarchy where the character is always the brightest thing in frame.*
+**LOCKED** (refined 2026-06-14; built 2026-06-13 from the styling-DNA workflow that extracted jubuddy-game Codex + Pictorial Book + GPT-image DNA). Canonical target for: (a) the fine-tune training-set "after" images (`inference/training-set/`), and (b) the deterministic render camera/lighting (`src/web_render/`). Hex values are exact.
+
+**One-line lock:** *a warm 2.5D **soft isometric** Hong Kong seen at dimetric 2:1 / 26.57°, readable like a board game — **polished mobile-game diorama art, NOT crunchy retro pixel-art**: pixel-CLEAN edges and restrained pixel-sharp outlines, flat cel fills on visible rice-paper grain, three faces (top·left·right, front never shown), under a 70% parchment / 20% ink / 6% HK teal-neon / 3% cinnabar / 1% antique-gold budget (neon as an accent, never the mood — harbour mist, lantern glow, wet stone, market colour, vertical-city silhouettes, not cyberpunk), day-primary with a day↔night re-light axis — harmonized with the plush Pictorial-Book folklore characters by shared paper, shared light, shared warmth, and a strict saturation hierarchy where the character is always the brightest thing in frame.*
+
+**Why soft, not strict pixel-art:** strict pixel art is beautiful but makes AI/render consistency much harder — repeated tiles expose every mismatch. The production choice for Jubuddy is **soft isometric + hand-cleaned sprite cells + restrained pixel-sharp outlines**, which matches the existing anime/Jubuddy assets better than crunchy retro pixel. (The deterministic shader keeps an optional `uPixelSize > 1` mosaic for a pixel variant, but the **shipped default is soft-clean** — `uPixelSize 1`.)
 
 This welds the city tiles to the Codex character line: both paint from the same swatches, same paper grain, same light, same single soft-graffiti contour rule. Built on `jubuddy-game` `prompt-themes/yok.ts` (palette/texture), `arcane.ts` (environment/lighting), `buddy-core/tokens` (mascot/brand), and the production-asset taste rubric (read-first / chunky-silhouette / quiet-center).
 
@@ -17,21 +21,26 @@ This welds the city tiles to the Codex character line: both paint from the same 
 
 **LOCKED 2026-06-13.** The token is a one-line contract the LoRA + every generation prompt must agree on — changing it means retraining. `inference/train.py` is the fine-tune entrypoint (was missing); it trains the 40-pair set (§5) to respond to this token and saves to the volume `server.py` reads.
 
-## 1. Palette — 70/20/8/2 budget
+## 1. Palette — 70 parchment / 20 ink / 6 teal-neon / 3 cinnabar / 1 gold
 
-**Base (70%)** — warm sun-bleached HK (SC2K warmth, no SC2K brown ground):
+**Locked HK visual formula (2026-06-14):** **70% warm parchment + 20% ink structure + 6% HK teal/neon + 3% cinnabar + 1% antique gold.** Neon is an accent, never the whole mood. (Pink stays a Jubit brand colour but is **reserved for the characters/creatures**, not fielded on city tiles — it helps the character win the saturation hierarchy. Jade is a material colour for harbour water / Star Ferry, not a budget accent.)
+
+**Parchment / base (70%)** — warm sun-bleached HK (no SC2K brown ground):
 | Role | Hex |
 |---|---|
 | Rice-paper substrate (whole tile) | `#F6F1E8` |
 | Warm off-white highlight | `#EFE7D8` |
 | Concrete light / mid / shadow | `#C9C2B6` / `#A89F90` / `#8A8378` |
-| Ink (soft contour + deepest creases) | `#1F1A17` |
 
-**Structure (20%)** — copper/cream/matte-gold built form: Piltover cream `#F0E2C9`, copper `#C8A36A`, matte antique gold `#C7A25B` (divider/highlight only — never chrome/gloss).
+**Ink structure (20%)** — `#1F1A17` (the single soft-graffiti contour + deepest creases + the built-form line that reads the silhouette). The structural backbone, not just outlines.
 
-**Accent (8%)** — Jubit brand, the fingerprint the LoRA learns to *inject* (~5–10% of pixels, placed not fielded): teal `#14B8A6`, pink `#EC4899`.
+**HK teal / neon (6%)** — the brand-accent fingerprint, placed not fielded: teal `#14B8A6`; at night the HK neon reserve ignites (see below). Harbour-cyan, lantern, sign glow — restrained.
 
-**Punctuation (2%)** — max 1–2/tile: cinnabar `#B64734` (tram/lantern/one sign), jade `#7C9C8E` (Star Ferry/piers). *(Cinnabar locked to Codex's authored Yok token `#B64734` — `yok.ts traditional.palette[2]` + `apps/web cinnabar_jade_gold.swatches[2]` + brand CSS `--cinnabar`. The earlier `#E63946` was Basquiat's "arterial red", not Yok cinnabar.)*
+**Cinnabar (3%)** — `#B64734` (tram/ding-ding, lantern, one sign). *(Locked to Codex's authored Yok token — `yok.ts traditional.palette[2]` + `apps/web cinnabar_jade_gold.swatches[2]` + brand CSS `--cinnabar`. The earlier `#E63946` was Basquiat's "arterial red", not Yok cinnabar.)*
+
+**Antique gold (1%)** — matte `#C7A25B` (divider/trim/highlight only — never chrome/gloss). Plus the **structure materials** it lives among: Piltover cream `#F0E2C9`, copper `#C8A36A`.
+
+**Material/support colours (not budget accents):** jade `#7C9C8E` (Star Ferry/piers), water-jade `#A8B8A3` (harbour).
 
 **Sky/water:** day sky warm wash `#EFE7D8`→`#E3D6BE` (25–40% negative space, no hard gradient); harbour water jade-grey `#A8B8A3` + ink ripples `#1F1A17` @12%, gold reflection `#C7A25B` only at the waterline.
 
@@ -70,13 +79,13 @@ Surface verdict: **"flat illustration with a soft brush, painted on rice paper"*
 
 The soft-stylised look is reached **deterministically, no AI/Modal**, via a Three.js post-process — because HK's textured `b3dm` input already carries real building texture (the reason isometric-nyc needed AI doesn't apply as hard here). This is the **shippable baseline**; the LoRA (`inference/train.py`) is optional A/B polish later.
 
-- `src/web_render/softStylise.js` — `EffectComposer` chain: **mosaic pixelate** → cel posterize (lifted into the warm-concrete range, **no black crush**) → warm grade → soft-graffiti contour (luminance-step Sobel, pixel-aligned) → rice-paper grain → **snap to the 15-colour Yok palette** (§1, hard hex-lock).
-- **Yok palette snap (closes the old "hard hex-lock" + "teal/pink injection" gaps).** Every pixel snaps to the nearest of the §1 swatches (rice-paper / off-white / concrete lt·md·sh / ink / cream / copper / antique-gold / sky / water / jade / **Jubit teal** / **Jubit pink** / cinnabar). The three high-chroma brand accents are **chroma-gated** — a grey concrete pixel can't mis-snap to teal/pink; only genuinely-colourful pixels reach them — so the brand colours appear *as accents* (the 8% intent), not as a field, with no AI. Strength = `uPaletteMix` (default 0.85; 1.0 = full hex-lock).
-- **Pixel mode (the "at least pixel-like" ask).** A mosaic pre-pass quantises to a screen-pixel grid; `uPixelSize` controls chunkiness (default 4; 6–8 = strong pixel-art read). Soft-stylised *and* pixel-art coexist — the palette discipline + pixel grid together give the pixel read while the warm cel-fills keep it painterly, not crisp-sprite.
-- Enabled by `style=soft` URL param; **`scripts/central_render_bake.py --style soft` is the default**, with `--pixel N` / `--palette 0..1` overrides (and `--settle-ms` to let KTX2 textures transcode before capture). `--style raw` emits the unstyled render = the input the optional AI restyle would consume (both paths from one renderer).
-- Tuned on dense Mong Kok: shadow floor 0.33 (deep concrete, not black), contour 0.24, pixel 6. Result reads as **warm pixel-art SC2000-Hong-Kong on rice paper** — harmonised with the jubuddy-game Yok character line by shared palette + paper + light.
+- `src/web_render/softStylise.js` — `EffectComposer` chain: (optional mosaic, off by default) → cel posterize (lifted into the warm-concrete range, **no black crush**) → warm grade → restrained pixel-sharp contour (luminance-step Sobel) → subtle rice-paper grain (fixed ~2px paper cell) → **snap to the 15-colour Yok palette** (§1, hard hex-lock).
+- **Soft-clean default (the "Yok-Iso HK" lock).** `uPixelSize` defaults to **1** = clean native edges, NOT a crunchy mosaic. The look = polished mobile-game diorama: flat cel fills + limited palette + crisp restrained outlines + subtle parchment grain. `uPixelSize > 1` (e.g. `--pixel 6`) is an **optional** chunky pixel variant, not the shipped style.
+- **Yok palette snap.** Every pixel snaps to the nearest of the §1 swatches (rice-paper / off-white / concrete lt·md·sh / ink / cream / copper / antique-gold / sky / water / jade / **Jubit teal** / **Jubit pink** / cinnabar). The three high-chroma brand accents are **chroma-gated** — a grey concrete pixel can't mis-snap to teal/pink; only genuinely-colourful pixels reach them — so the brand colours appear *as accents* (the 6% intent), not as a field, with no AI. Strength = `uPaletteMix` (default 0.85; 1.0 = full hex-lock).
+- Enabled by `style=soft` URL param; **`scripts/central_render_bake.py --style soft` is the default** (soft-clean), with optional `--pixel N` / `--palette 0..1` overrides (and `--settle-ms` for KTX2 transcode). `--style raw` emits the unstyled render = the input the optional AI restyle would consume.
+- Tuned on dense Mong Kok (soft-clean): shadow floor 0.30 (deep concrete, not black), restrained pixel-sharp contour 0.32 on a fixed 1.5px tap, paper grain on a fixed 2px cell, `uPixelSize 1`. Reads as **soft isometric parchment-city diorama** — clean edges + form-defining ink outline, harmonised with the jubuddy-game Yok character line by shared palette + paper + light.
 - **Still deterministic** (grain keyed off screen position, not time) → identical re-renders, required for tileability.
-- Remaining gaps (candidates for the optional AI pass): semantic accent *placement* (a shader can't know which sign is the hero), the day↔night neon re-light axis, in-crease AO. The Yok-palette + pixel baseline is achieved with zero AI.
+- Remaining gaps (candidates for the optional AI pass): semantic accent *placement* (a shader can't know which sign is the hero), the day↔night neon re-light axis, in-crease AO. The soft Yok-Iso baseline is achieved with zero AI.
 
 ## 5. The 40-pair training rubric (grades every "after" image)
 
@@ -94,7 +103,7 @@ The soft-stylised look is reached **deterministically, no AI/Modal**, via a Thre
 
 ## 6. HK stage motifs → per-tile treatment
 
-Each tile = one dominant read; all obey 70/20/8/2 + 25–40% negative space + rice-paper grain + single soft-graffiti contour; must read at 64px.
+Each tile = one dominant read; all obey 70/20/6/3/1 + 25–40% negative space + rice-paper grain + single soft-graffiti contour; must read at 64px.
 
 | Family | Focal | Treatment |
 |---|---|---|
@@ -105,7 +114,23 @@ Each tile = one dominant read; all obey 70/20/8/2 + 25–40% negative space + ri
 | **Island pier** | stilts + gangway + lantern string | wood/earth textures (tea-brown `#8D6B4D`, kraft grain); paper-lantern string as warm punctuation |
 | **Transit concourse** | repeating column/turnstile rhythm | metal vocabulary softened to designer-toy matte; quiet center, readable lane |
 
+## 7. Layer split (LOCKED 2026-06-14) — what comes from where
+
+The HK Jubuddy theme is built in four separable layers, each with its own production source. Mixing them is what makes the theme cohere without the pipeline fighting gameplay readability.
+
+| Layer | What | Source | Rule |
+|---|---|---|---|
+| **Ground tiles** | path · tower pads · blocked · spawn · goal | **hand-authored** (NOT the bake/AI pipeline) | clean, reusable, instantly readable; no photoreal HK detail. Gameplay legibility always wins. |
+| **Identity props** | HK-flavoured one-off sprites | hybrid: `--transparent` bake → hand-clean | dropped onto the clean ground; carry the HK-ness so the ground stays reusable |
+| **Backdrops** | painterly isometric stage cards | full-scene styled bake (hero tiles) | location-card / world-map art; the calm parchment stage |
+| **Characters / creatures** | Pictorial-Book folklore fused with HK roles | existing character pipeline (Paper Doll / roster) | always the most saturated thing in frame; pink lives here, not on tiles |
+
+**HK identity prop vocabulary:** ferry · pier lamps · tong-lau blocks · market awnings · footbridges · tram-like carriage · station entrances · harbour railings. (Each a single soft-iso sprite on transparency.)
+
+**HK creature roster (Pictorial-Book × HK roles):** ferry piglet · neon yokai imp · paper-air spirit · gate mimic · flower-spirit crab · cloud dragonling. (Stay on the character pipeline; the city is their stage, never rendered by the city pipeline.)
+
 ## Deferred follow-ups
+- **Seamless map calibration** (Output A): the naive `map_grid` stitch (PR — seam test) leaves gaps — the ground-coverage-per-tile estimate (footprint/sin θ) is too large, so tiles space too far apart. Calibrate the real ground coverage (measure from a known-scale render), then expect a residual building-overhang seam needing an overlap-blend pass (the isometric-nyc hard 90%). Tracked before the DZI/OpenSeaDragon viewer.
 - AO pass (EffectComposer SAO/SSAO) for the in-crease shadow.
-- Night/neon emissive axis in the renderer.
+- Night/neon emissive axis in the renderer (the 6% teal-neon day↔night ignite).
 - 45° azimuth experiment (exactly-3-faces) vs the current −15°.

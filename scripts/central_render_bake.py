@@ -60,6 +60,34 @@ def grid_centers():
             yield f"tile_{r * COLS + c:02d}", lat, lon, VIEW_HEIGHT_M
 
 
+def map_grid(center_lat, center_lon, cols, rows, footprint_m, elevation_deg, azimuth_deg):
+    """Seamless tile centers for a deep-zoom MAP (Output A), row-major from NW.
+
+    Unlike grid_centers (a loose Week-2 pilot grid), spacing == the tile's true
+    GROUND coverage so adjacent tiles abut. For an orthographic camera at
+    elevation θ, a tile of `footprint_m` view-height covers:
+      • footprint_m wide  along the screen-horizontal axis
+      • footprint_m / sin θ deep along the screen-vertical axis (foreshortened)
+    With azimuth 0 the screen axes align with E (lon) / N (lat), so:
+      dLon = footprint_m / (111320·cos lat) ,  dLat = (footprint_m/sin θ)/111320
+    (Tall buildings still overhang a tile's top edge — that seam is what the
+    empirical montage test measures; if bad, an overlap-blend pass is needed.)
+    """
+    import math
+    if abs(azimuth_deg) > 1e-6:
+        print(f"   ⚠️  map_grid assumes azimuth 0 for axis-aligned tiling "
+              f"(got {azimuth_deg}); seams will skew.")
+    sin_el = math.sin(math.radians(abs(elevation_deg))) or 1.0
+    depth_m = footprint_m / sin_el
+    dlat = depth_m / 111320.0
+    dlon = footprint_m / (111320.0 * math.cos(math.radians(center_lat)))
+    lat0 = center_lat + (rows - 1) / 2.0 * dlat   # row 0 = north
+    lon0 = center_lon - (cols - 1) / 2.0 * dlon   # col 0 = west
+    for r in range(rows):
+        for c in range(cols):
+            yield f"r{r}_c{c}", lat0 - r * dlat, lon0 + c * dlon, footprint_m
+
+
 def named_locations(locations_path: Path):
     """Yield (id, lat, lon, view_height_m) for each renderable named location.
 
@@ -139,19 +167,31 @@ def main() -> int:
                              "shippable look, no AI; raw = unstyled render (the input the "
                              "optional AI restyle would consume)")
     parser.add_argument("--pixel", type=float, default=None,
-                        help="soft only: mosaic block in screen px (chunkier = more pixel-art; "
-                             "default 4). e.g. --pixel 8 for a strong pixel read")
+                        help="soft only: mosaic block in screen px. Default 1 = soft-clean "
+                             "diorama (the shipped 'Yok-Iso HK' look). >1 = OPTIONAL chunky "
+                             "pixel variant (e.g. --pixel 6); not the default style.")
     parser.add_argument("--palette", type=float, default=None,
                         help="soft only: 0..1 snap strength to the 15-colour Yok palette "
                              "(default 0.85; 1.0 = hard hex-lock)")
     parser.add_argument("--transparent", action="store_true",
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")
+    parser.add_argument("--map", type=str, default=None,
+                        help="seamless deep-zoom MAP grid: 'lat,lon,cols,rows,footprint_m' "
+                             "(spacing == ground coverage so tiles abut). Use azimuth 0. "
+                             "Tiles named r{row}_c{col} for stitching (scripts/stitch_grid.py).")
     args = parser.parse_args()
     az, el = args.azimuth, args.elevation
 
-    # Choose tile source: named locations or the uniform Central grid.
-    if args.locations:
+    # Choose tile source: seamless map grid, named locations, or pilot grid.
+    if args.map:
+        clat, clon, cols, rows, fp = args.map.split(",")
+        tiles = list(map_grid(float(clat), float(clon), int(cols), int(rows),
+                              float(fp), el, az))
+        out_dir = REPO / "scripts" / "out" / (args.out_dir or "map")
+        print(f"🗺️  map grid: {cols}×{rows} @ {fp}m footprint, "
+              f"center ({clat},{clon}), el={el} az={az}")
+    elif args.locations:
         tiles = list(named_locations(args.locations))
         out_dir = REPO / "scripts" / "out" / (args.out_dir or "locations")
     else:

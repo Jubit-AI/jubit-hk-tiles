@@ -139,14 +139,19 @@ function init() {
   scene = new Scene();
 
   // Lighting — HK b3dm tiles use PBR (MeshStandard) materials that render
-  // BLACK without lights (unlike Google's baked-texture tiles the upstream
-  // targeted). Soft hemisphere ambient + a directional "sun" gives flat,
-  // even, deterministic illumination suited to the downstream soft-stylised
-  // restyle (no harsh shadows that would bake into the Stage-1 render).
-  const hemi = new HemisphereLight(0xffffff, 0x99aabb, 2.0);
+  // BLACK without lights. Tuned per the "Soft-Stylised Dimetric HK" aesthetic
+  // spec (docs/design/aesthetic-spec.md §3A): WARM key + lifted-but-not-flooded
+  // ambient so HK's canyon creases stay dark ("soft in the gaps, flat on the
+  // faces") and tower tops don't blow out. Earlier flat-bright/cool values
+  // (hemi 2.0 + dir 2.5 white) washed out the density read.
+  //   key:     warm #FFEAC4, intensity 1.9, upper-left (matches camera azimuth)
+  //   ambient: warm sky #F0E2C9 / concrete ground #A89F90, intensity 1.35
+  // (Soft AO in the creases is a documented follow-up — needs an EffectComposer
+  //  SAO/SSAO pass; deferred to keep the deterministic bake simple.)
+  const hemi = new HemisphereLight(0xf0e2c9, 0xa89f90, 1.35);
   scene.add(hemi);
-  const sun = new DirectionalLight(0xffffff, 2.5);
-  sun.position.set(1, 2, 1);
+  const sun = new DirectionalLight(0xffeac4, 1.9);
+  sun.position.set(-1, 2, 1); // upper-left key
   scene.add(sun);
 
   // Camera transition manager (handles both perspective and orthographic)

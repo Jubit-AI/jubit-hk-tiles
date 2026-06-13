@@ -66,5 +66,13 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# The distribution is named "jubit-hk-tiles" but the package dir is still
+# src/isometric_nyc/ (rename to isometric_hk deferred to Week 7 — see
+# docs/research/nyc-to-hk-coupling-checklist.md #40). Tell hatchling
+# explicitly, else it auto-detects "jubit_hk_tiles/" from the dist name,
+# fails to find it, and `uv run` errors on the editable build.
+[tool.hatch.build.targets.wheel]
+packages = ["src/isometric_nyc"]
+
 [tool.marimo.runtime]
 output_max_bytes = 20_000_000

@@ -131,6 +131,10 @@ def main() -> int:
     parser.add_argument("--elevation", type=float, default=EL,
                         help=f"camera elevation deg; true-iso={EL}, SC2000 dimetric=-26.565 "
                              "(flatter = more tower-face, better for HK verticality)")
+    parser.add_argument("--style", choices=["raw", "soft"], default="soft",
+                        help="soft (default) = deterministic soft-stylise post-process, the "
+                             "shippable look, no AI; raw = unstyled render (the input the "
+                             "optional AI restyle would consume)")
     args = parser.parse_args()
     az, el = args.azimuth, args.elevation
 
@@ -155,11 +159,14 @@ def main() -> int:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True, args=launch_args)
             for label, lat, lon, view_h in tiles:
-                q = urlencode({
+                params = {
                     "export": "true", "lat": lat, "lon": lon,
                     "width": WIDTH, "height": HEIGHT,
                     "azimuth": az, "elevation": el, "view_height": view_h,
-                })
+                }
+                if args.style == "soft":
+                    params["style"] = "soft"
+                q = urlencode(params)
                 ctx = browser.new_context(
                     viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
                 )

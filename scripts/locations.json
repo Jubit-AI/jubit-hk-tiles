@@ -1,0 +1,23 @@
+{
+  "_comment": "Named HK hero locations for the render pipeline. Feeds (a) curated backdrops (Output B/F) and (b) the fine-tune training-set inputs (inference/training-set). lat/lon in WGS84. view_height_m tunes the orthographic frustum to each area's scale. bucket maps to the training-set coverage buckets. All locations chosen IP-safe per docs/legal/attribution.md (districts = place names; landmarks = 🟢 tier). The `building` 3dsd endpoint is dense in urban districts; rural/marine landmarks (Tai O, Big Buddha, bridges) render sparse from the building layer and need the infrastructure layer — flagged needs_infra=true, deferred.",
+  "locations": [
+    { "id": "central",        "name": "Central",                 "lat": 22.2816, "lon": 114.1578, "view_height_m": 380, "bucket": "dense-urban" },
+    { "id": "sheung-wan",     "name": "Sheung Wan",              "lat": 22.2870, "lon": 114.1500, "view_height_m": 360, "bucket": "mid-rise" },
+    { "id": "wan-chai",       "name": "Wan Chai",                "lat": 22.2790, "lon": 114.1730, "view_height_m": 380, "bucket": "dense-urban" },
+    { "id": "causeway-bay",   "name": "Causeway Bay",            "lat": 22.2800, "lon": 114.1850, "view_height_m": 380, "bucket": "dense-urban" },
+    { "id": "north-point",    "name": "North Point",             "lat": 22.2910, "lon": 114.2000, "view_height_m": 360, "bucket": "mid-rise" },
+    { "id": "tsim-sha-tsui",  "name": "Tsim Sha Tsui",           "lat": 22.2960, "lon": 114.1722, "view_height_m": 400, "bucket": "dense-urban" },
+    { "id": "mong-kok",       "name": "Mong Kok",                "lat": 22.3190, "lon": 114.1690, "view_height_m": 340, "bucket": "mid-rise" },
+    { "id": "sham-shui-po",   "name": "Sham Shui Po",            "lat": 22.3300, "lon": 114.1620, "view_height_m": 340, "bucket": "mid-rise" },
+    { "id": "kwun-tong",      "name": "Kwun Tong",               "lat": 22.3110, "lon": 114.2260, "view_height_m": 400, "bucket": "dense-urban" },
+    { "id": "victoria-harbour","name": "Victoria Harbour edge",  "lat": 22.2930, "lon": 114.1680, "view_height_m": 650, "bucket": "water" },
+    { "id": "kowloon-walled-city-park", "name": "Kowloon Walled City Park", "lat": 22.3320, "lon": 114.1900, "view_height_m": 320, "bucket": "coastline", "needs_infra": false },
+    { "id": "kai-tak",        "name": "Kai Tak",                 "lat": 22.3290, "lon": 114.1990, "view_height_m": 450, "bucket": "infrastructure" }
+  ],
+  "deferred_needs_infra": [
+    { "id": "tsing-ma-bridge","name": "Tsing Ma Bridge",         "lat": 22.3510, "lon": 114.0740, "bucket": "infrastructure", "needs_infra": true },
+    { "id": "stonecutters-bridge","name": "Stonecutters Bridge", "lat": 22.3360, "lon": 114.1230, "bucket": "infrastructure", "needs_infra": true },
+    { "id": "tian-tan-buddha","name": "Tian Tan Buddha",         "lat": 22.2540, "lon": 113.9050, "bucket": "vegetation", "needs_infra": true },
+    { "id": "tai-o",          "name": "Tai O stilt houses",      "lat": 22.2520, "lon": 113.8590, "bucket": "coastline", "needs_infra": true }
+  ]
+}

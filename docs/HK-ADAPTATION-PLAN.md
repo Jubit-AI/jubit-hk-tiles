@@ -50,11 +50,16 @@ One shared deterministic Stage-1 render (Three.js orthographic camera over HK Ce
 - HK tiles use **`box` bounding volumes** (ECEF center + half-axes), NOT geographic `region`. Root carries a `transform`; refinement is `REPLACE`; root has 44 children.
 - ⚠️ **Bbox cropping refinement needed**: because volumes are `box`, a cheap lat/lng intersection test can't precisely crop to a district (the pilot's loose filter descended the whole subtree → inflated "162K matched" count, which is "tiles in subtree", not "tiles in Central"). Before full-territory batching we need to decode the box (ECEF center + half-axes) + apply the root `transform`, then test against the district bbox in ECEF — OR crop at render time via the camera frustum. Tracked for the render layer.
 
-**Render half — ⬜ NEXT (the genuinely new code, multi-day):**
-- ⬜ Headless Three.js + `3d-tiles-renderer` loads the HK `b3dm` tiles
-- ⬜ Orthographic camera at isometric angle; per-tile angle per `docs/qa/verticality.md` Option A
-- ⬜ Export PNG quadrants + metadata for the Central bbox
-- ⬜ **Verification gate**: visually inspect ~20 Central tiles. PASS = tiles look acceptable; FAIL = re-tune camera or accept stylistic occlusion.
+**Render half — ✅ DONE (Week 2 gate PASSED, 2026-06-13):**
+- ✅ Reused the upstream `src/web_render` Three.js + `3d-tiles-renderer` page (it already had the full export contract: export mode, `TILES_LOADED` gate, URL params, orthographic iso camera). Retargeted to HK in ~4 lines.
+- ✅ `scripts/central_render_bake.py` — headless Playwright driver, 20-tile Central grid, `--limit` for single-tile smoke, console capture.
+- ✅ Rendered **20/20 Central tiles** end-to-end from the live HK API → `scripts/out/central/` (gitignored). Density gradient tracks reality (dense core tiles 350–395 KB; harbour tiles ~5 KB).
+- ✅ **Gate PASS**: dense core (tile_10) shows the Central skyline at correct iso angle with real massing + lighting. Verticality occlusion in dense tiles is mild — accepted for the pilot per the plan ("FAIL = … or accept stylistic occlusion").
+
+**Three real blockers hit + fixed (carry forward):**
+1. **Node 18 vs Vite 7** — Vite 7 needs Node 20+ (`crypto.hash`). Fix: run vite under bun's runtime (`bun --bun run dev`). The bake script does this.
+2. **KTX2 textures** — HK b3dm uses KTX2/BasisU-compressed textures; without a `KTX2Loader` every tile threw `setKTX2Loader must be called…` and rendered untextured. Fix: wired `KTX2Loader` (transcoder pinned to three 0.181.2) into `GLTFExtensionsPlugin`.
+3. **Black buildings** — HK PBR materials render black unlit (unlike Google's baked-texture tiles the upstream targeted). Fix: added `HemisphereLight` + `DirectionalLight` to the scene. Output jumped 22 KB → 188 KB once lit.
 
 ### Week 3–4 — Jubit aesthetic fine-tune
 

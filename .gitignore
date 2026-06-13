@@ -203,3 +203,6 @@ generations/tiny-nyc/*.db
 # Layers directory
 layers/*
 !layers/README.md
+
+# render-half build artifacts (PNG tiles)
+scripts/out/

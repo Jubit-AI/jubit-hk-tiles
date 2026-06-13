@@ -1,12 +1,12 @@
 {
-  "name": "Madison Square Garden",
-  "lat": 40.7505,
-  "lon": -73.9934,
+  "name": "Central, Hong Kong",
+  "lat": 22.2816,
+  "lon": 114.1578,
   "size_meters": 300,
   "camera_height_meters": 300,
   "camera_azimuth_degrees": -15,
-  "camera_elevation_degrees": -45,
-  "width_px": 1280,
-  "height_px": 720,
-  "view_height_meters": 200
+  "camera_elevation_degrees": -35.264,
+  "width_px": 1024,
+  "height_px": 1024,
+  "view_height_meters": 350
 }

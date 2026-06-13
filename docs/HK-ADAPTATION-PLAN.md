@@ -2,6 +2,17 @@
 
 Tracks delivery of the 12-week plan approved 2026-06-13. The full plan lives at `~/.claude/plans/brainstorming-that-we-have-snoopy-adleman.md` on the operator's machine and is the source of truth; this file is the week-by-week status.
 
+## FINAL research corrections (2026-06-13, round 2) — read first
+
+Five locked refinements (full text in `docs/legal/attribution.md` + the adapter docstring):
+1. **Licensing**: bake ingests **only** from the open-data regime (`3dsd` API for the pilot; CSDI bulk for full territory). Never the legacy Map API (`hkmapservice.gov.hk`). Confirm `3dsd` terms in writing before commercial launch.
+2. **Textured only**: never the ~220K Sept-2025 non-textured/whitebox set. Bulk textured = 3D-BIT00 (FBX) / Individualised (glTF).
+3. **Pixel aesthetic = soft-stylised isometric** (locked; sets the Week 3–4 fine-tune training set — not crisp pixel).
+4. **Game assets = two-layer split**: hand-authored anime ground tiles (gameplay legibility) + hybrid-kitbash HK props (identity). The AI pipeline feeds props, never repeated game tiles.
+5. **MTR = indoor-station → TD board topology** (downloadable 3D Indoor dataset + connectivity graph), spiked Week 5–6 — supersedes the exterior metro-inspired theme. Ding Ding tram stays a separate aesthetic theme.
+
+Sequencing: full map (A) is the dseek priority; cheap game-asset work runs in parallel. Engine choice (Pixi vs Three.js-iso vs Unity) is decoupled — defer it.
+
 ## Architecture (one-liner)
 
 One shared deterministic Stage-1 render (Three.js orthographic camera over HK Cesium 3D Tiles) → two AI-styled outputs (full territory + curated backdrops) + one hand-authored output (game-grid tileset). See repo `README.md` for the visual.

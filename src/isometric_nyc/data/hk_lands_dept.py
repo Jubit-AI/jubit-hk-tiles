@@ -6,10 +6,11 @@ fetches **Cesium 3D Tiles tilesets** directly from the Lands Department,
 which already includes textured 3D geometry — so the photoreal layer is
 free and we skip the upstream's satellite-compositing step.
 
-See `docs/HK-ADAPTATION-PLAN.md` for week-by-week status and
-`scripts/request-hk-api-key.md` for the API-key request flow.
+See `docs/HK-ADAPTATION-PLAN.md` for week-by-week status,
+`scripts/request-hk-api-key.md` for the API-key request flow, and
+`docs/legal/attribution.md` for the licensing rules summarized below.
 
-Endpoints we use:
+Endpoints we use (3D Spatial Data API — the OPEN-DATA regime):
   - https://data.map.gov.hk/api/3d-data/3dsd/WGS84/building/tileset.json
   - https://data.map.gov.hk/api/3d-data/3dsd/WGS84/infrastructure/tileset.json
   - https://data.map.gov.hk/api/3d-data/3dtiles/f2/tileset.json   (visualisation map)
@@ -19,6 +20,35 @@ fair-use limits are 5 GB/sec bandwidth and 100 concurrent users.
 
 Spatial reference: WGS84 (EPSG:4326) — already matches the upstream
 renderer's expectations.
+
+─── CORRECTNESS RULES (FINAL research, 2026-06-13) — read before extending ───
+
+  TEXTURED, not whitebox. These `3dsd` endpoints serve the *textured*
+  Tile-based models (b3dm with embedded texture — verified: probed leaf
+  tiles came back ~150 KB with `magic='b3dm'`). Do NOT switch to the
+  headline ~220K Sept-2025 "3D Visualisation Map (Non-textured models)"
+  release — that is geometry-only whitebox, the exact thing the upstream
+  NYC artist abandoned because untextured geometry forces the image model
+  to hallucinate. Targeting it would re-introduce a multi-week failure.
+
+  LICENSING — two regimes, do not confuse them:
+    * THIS host's `3dsd` 3D Spatial Data API is the OPEN-DATA regime
+      (attribution-only, no logo-on-map-face). Fine for the Central pilot.
+    * The legacy Map API (api.portal.hkmapservice.gov.hk — topographic /
+      imagery) is STRICTER: Lands Dept logo *on the map face* + bundled
+      third-party satellite imagery (Sentinel-2 / Landsat / MODIS). NEVER
+      ingest from it — it defeats the "stay on the government mesh"
+      discipline and adds attribution surfaces.
+
+  FULL-TERRITORY BAKE uses CSDI BULK DOWNLOADS, not this live API:
+    geodata.gov.hk/gs/ or portal.csdi.gov.hk — cleanest terms + doesn't
+    hammer the live endpoint 50K times. Bulk textured products:
+    "3D Spatial Data 3D-BIT00" (FBX) or "Individualised models" (glTF).
+    This live API is for the pilot only.
+
+  Before COMMERCIAL launch: confirm the exact `3dsd` terms in writing with
+  Lands Dept. The open-data finding is strong but the FINAL research
+  flagged the two-regime split as a trap worth a written confirmation.
 """
 
 from __future__ import annotations

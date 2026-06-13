@@ -144,6 +144,9 @@ def main() -> int:
     parser.add_argument("--palette", type=float, default=None,
                         help="soft only: 0..1 snap strength to the 15-colour Yok palette "
                              "(default 0.85; 1.0 = hard hex-lock)")
+    parser.add_argument("--transparent", action="store_true",
+                        help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
+                             "Pair with a tight view_height per location to isolate a landmark.")
     args = parser.parse_args()
     az, el = args.azimuth, args.elevation
 
@@ -179,6 +182,8 @@ def main() -> int:
                         params["pixel"] = args.pixel
                     if args.palette is not None:
                         params["palette"] = args.palette
+                if args.transparent:
+                    params["transparent"] = "true"
                 q = urlencode(params)
                 ctx = browser.new_context(
                     viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
@@ -230,7 +235,7 @@ def main() -> int:
                   return out;
                 }""")
                 out_path = out_dir / f"{label}.png"
-                page.screenshot(path=str(out_path))
+                page.screenshot(path=str(out_path), omit_background=args.transparent)
                 size = out_path.stat().st_size
                 total = inv.get("total", 0)
                 no_map = inv.get("noMap", 0)

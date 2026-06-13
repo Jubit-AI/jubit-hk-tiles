@@ -41,6 +41,10 @@ const STYLE_MODE = urlParams.get("style") === "soft";
 // to the 15-colour Yok palette. Null = use the shader defaults (4 / 0.85).
 const PIXEL_SIZE = urlParams.has("pixel") ? parseFloat(urlParams.get("pixel")) : null;
 const PALETTE_MIX = urlParams.has("palette") ? parseFloat(urlParams.get("palette")) : null;
+// transparent=true → no sky fill; the alpha channel is preserved end-to-end so a
+// tightly-framed landmark bakes as a game-ready PROP SPRITE (the jubuddy-HK
+// identity layer). Screenshot with omit_background to keep the transparency.
+const TRANSPARENT = urlParams.get("transparent") === "true";
 
 // Configuration with URL param overrides
 const CANVAS_WIDTH = parseInt(urlParams.get("width")) || view.width_px;
@@ -139,8 +143,12 @@ function init() {
   );
 
   // Renderer - fixed size, no devicePixelRatio scaling for consistency
-  renderer = new WebGLRenderer({ antialias: true });
-  renderer.setClearColor(0x87ceeb); // Sky blue
+  renderer = new WebGLRenderer({ antialias: true, alpha: TRANSPARENT });
+  if (TRANSPARENT) {
+    renderer.setClearColor(0x000000, 0); // transparent → prop-sprite alpha
+  } else {
+    renderer.setClearColor(0x87ceeb); // Sky blue
+  }
   renderer.setPixelRatio(1); // Fixed 1:1 pixel ratio for consistent rendering
   renderer.setSize(CANVAS_WIDTH, CANVAS_HEIGHT);
   document.body.appendChild(renderer.domElement);

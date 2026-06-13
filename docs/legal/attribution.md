@@ -11,11 +11,29 @@ Source: [DATA.GOV.HK Terms and Conditions](https://data.gov.hk/en/terms-and-cond
 3. **No resale of the data**: this is the one explicit prohibition in the FAQ. Selling a *game* containing derivative stylized assets is permitted (transformative product). Selling the *tiles themselves* as an asset pack is the prohibited line.
 4. **Indemnity**: you indemnify the Government against third-party infringement claims arising from your use.
 
+### Two licensing regimes — do not confuse them (FINAL research, 2026-06-13)
+
+HK gov 3D data is served from confusingly-similar hosts under **different terms**. Getting this wrong is a compliance failure, so it's a hard rule:
+
+| Source | Terms | Use |
+|---|---|---|
+| **3D Spatial Data API** — `data.map.gov.hk/api/3d-data/3dsd/…` | Open-data regime: attribution-only, **no logo-on-map-face** | ✅ Central pilot (live). Our Week 2 adapter uses this — verified safe. |
+| **CSDI bulk downloads** — `geodata.gov.hk/gs/`, `portal.csdi.gov.hk` | Open-data regime (same as above) | ✅ **The full-territory bake source** — cleanest terms, doesn't hammer the live API. |
+| **Legacy Map API** — `api.portal.hkmapservice.gov.hk` (topographic/imagery) | **Stricter**: Lands Dept logo *on the map face* + bundled Sentinel-2/Landsat/MODIS imagery, each with own attribution | ❌ **Never ingest from it.** Defeats "stay on the government mesh." |
+
+**Hard rules:**
+- The offline bake ingests **only** from CSDI bulk downloads (or the `3dsd` API for the pilot). Never the legacy Map API.
+- ⚠️ **Before commercial launch**: confirm the exact `3dsd` open-data terms in writing with Lands Dept. The "safe" finding is strong but the FINAL research flagged the two-regime split as a trap — get it in writing.
+
+### Textured, not whitebox (FINAL research, 2026-06-13)
+
+Target **textured** products only. The headline ~220K Sept-2025 **"3D Visualisation Map (Non-textured models)"** is geometry-only whitebox — the exact thing the upstream NYC artist abandoned (untextured geometry → image-model hallucination). Textured sources: the `3dsd` Tile-based models (live, verified textured b3dm), **"3D Spatial Data 3D-BIT00" (FBX)** or **"Individualised models" (glTF)** for bulk.
+
 ### Trademark / signage caveat (not covered by the data license)
 
-The open-data license covers the geospatial data. It does **not** grant trademark rights to logos that appear baked into textures — IFC, ICC, Bank of China Tower, MTR, named retail chains. Recognizable corporate signage in a commercial product is a separate trademark question.
+The open-data license covers the geospatial data. It does **not** grant trademark rights to logos that appear baked into textures — IFC, ICC, Bank of China Tower, MTR, named retail chains. Recognizable corporate signage in a commercial product is a separate trademark question. Architectural *shapes* are free under HK Copyright Ordinance §71 (public-place depiction exemption); only logos/signage/names are protected.
 
-**Mitigation in our pipeline**: the Qwen pixel-art re-style at Stage 2A naturally abstracts most signage into unreadable color blocks. The Week 11 legal spot-check (per `docs/HK-ADAPTATION-PLAN.md`) verifies this on Output B (curated backdrops, which get the most user attention).
+**Mitigation in our pipeline**: the soft-stylised re-style at Stage 2A naturally abstracts most signage into unreadable color blocks. The Week 11 legal spot-check (per `docs/HK-ADAPTATION-PLAN.md`) verifies this on the hero-location crops (which get the most user attention).
 
 ## Cannoneyed/isometric-nyc upstream — MIT
 

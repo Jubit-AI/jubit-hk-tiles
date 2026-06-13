@@ -6,7 +6,6 @@ import {
   CAMERA_FRAME,
 } from "3d-tiles-renderer";
 import {
-  GoogleCloudAuthPlugin,
   GLTFExtensionsPlugin,
   TileCompressionPlugin,
 } from "3d-tiles-renderer/plugins";
@@ -17,14 +16,19 @@ import {
   PerspectiveCamera,
   OrthographicCamera,
   MathUtils,
+  HemisphereLight,
+  DirectionalLight,
 } from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 
 import view from "../view.json";
 
 // --- CONFIGURATION ---
-const API_KEY = import.meta.env.VITE_GOOGLE_TILES_API_KEY;
-console.log("API Key loaded:", API_KEY ? "Yes" : "No");
+// HK Lands Department 3D Spatial Data API key (open-data regime).
+// Vite injects only VITE_-prefixed vars into the browser bundle.
+const API_KEY = import.meta.env.VITE_HK_LANDSD_API_KEY;
+console.log("HK API Key loaded:", API_KEY ? "Yes" : "No");
 
 const urlParams = new URLSearchParams(window.location.search);
 const EXPORT_MODE = urlParams.get("export") === "true";
@@ -107,7 +111,10 @@ let cameraInitialized = false;
 // Let's try adjusting the target height to see if it aligns better.
 // If we look at 15m, the camera moves up, and the scene moves DOWN in the frame.
 // If the web view is too high, we need to look HIGHER (larger Z).
-const TARGET_HEIGHT = -31.3; // Geoid height for NYC (approx -31.3m)
+// HK ground sits ~+2 to +5m above the WGS84 ellipsoid in Central (Hong Kong
+// Principal Datum). NYC's -31.3 geoid would sink the look-at ~36m below HK
+// ground and frame sky. Start at +5, tune against output per docs/qa/verticality.
+const TARGET_HEIGHT = 5;
 
 init();
 animate();
@@ -131,6 +138,17 @@ function init() {
   // Scene
   scene = new Scene();
 
+  // Lighting — HK b3dm tiles use PBR (MeshStandard) materials that render
+  // BLACK without lights (unlike Google's baked-texture tiles the upstream
+  // targeted). Soft hemisphere ambient + a directional "sun" gives flat,
+  // even, deterministic illumination suited to the downstream soft-stylised
+  // restyle (no harsh shadows that would bake into the Stage-1 render).
+  const hemi = new HemisphereLight(0xffffff, 0x99aabb, 2.0);
+  scene.add(hemi);
+  const sun = new DirectionalLight(0xffffff, 2.5);
+  sun.position.set(1, 2, 1);
+  scene.add(sun);
+
   // Camera transition manager (handles both perspective and orthographic)
   transition = new CameraTransitionManager(
     new PerspectiveCamera(60, aspect, 1, 160000000),
@@ -146,15 +164,25 @@ function init() {
     controls.setCamera(camera);
   });
 
-  // Initialize tiles
-  tiles = new TilesRenderer();
-  tiles.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: API_KEY }));
+  // Initialize tiles — HK Lands Dept textured b3dm tileset (open-data 3dsd API).
+  // No auth plugin: HK passes the key as a query param (browser-friendly, no
+  // preflight). Endpoint mirrors hk_lands_dept.py / central_pilot_fetch.py.
+  const HK_TILESET_URL =
+    `https://data.map.gov.hk/api/3d-data/3dsd/WGS84/building/tileset.json?key=${API_KEY}`;
+  tiles = new TilesRenderer(HK_TILESET_URL);
   tiles.registerPlugin(new TileCompressionPlugin());
+  // HK b3dm textures are KTX2/BasisU-compressed — without a KTX2 loader every
+  // tile throws "setKTX2Loader must be called before loading KTX2 textures" and
+  // renders untextured/empty. detectSupport(renderer) picks the GPU's format;
+  // transcoder path pinned to the installed three (0.181.2).
   tiles.registerPlugin(
     new GLTFExtensionsPlugin({
       dracoLoader: new DRACOLoader().setDecoderPath(
-        "https://unpkg.com/three@0.153.0/examples/jsm/libs/draco/gltf/"
+        "https://unpkg.com/three@0.181.2/examples/jsm/libs/draco/gltf/"
       ),
+      ktxLoader: new KTX2Loader()
+        .setTranscoderPath("https://unpkg.com/three@0.181.2/examples/jsm/libs/basis/")
+        .detectSupport(renderer),
     })
   );
 
@@ -280,7 +308,7 @@ function positionCamera() {
   // We want the target point to be in the center of the screen.
   // That is already what getObjectFrame does (looks at the origin of the frame).
 
-  console.log(`Camera positioned above Times Square at ${HEIGHT}m`);
+  console.log(`Camera positioned at target height ${TARGET_HEIGHT}m`);
   console.log(`Azimuth: ${CAMERA_AZIMUTH}°, Elevation: ${CAMERA_ELEVATION}°`);
   console.log(`Mode: ${transition.mode}`);
 

@@ -66,4 +66,8 @@ Render Central with **Option A** (per-tile camera angle, height-variance-driven)
   2. **Verticality**: the box half-axes give us per-tile height extent directly (the vertical half-axis magnitude). That's exactly the signal Option A needs — we can drive the per-tile camera elevation off the box's vertical extent without a separate height-variance pass. Bonus: Option A got cheaper.
 - Real `b3dm` payloads confirmed (textured mesh, ~150 KB/tile). The renderer will consume `b3dm`, not `glb` directly — `3d-tiles-renderer` handles `b3dm` natively, so no format conversion needed.
 
-_Render-angle decision still pending the first Central render._
+**2026-06-13 — first Central render done (20 tiles).** Used a **constant** camera angle territory-wide (azimuth -15°, true-iso elevation -35.264°, `view_height_meters=350`) — i.e. **Option B (accept stylistic occlusion)** for the pilot, NOT yet the per-tile Option A. Findings:
+- Dense-core tiles (e.g. tile_10, Central towers) show mild verticality occlusion — tall towers overlap shorter buildings behind them — but the result is legible and characterful (SimCity-esque), so it's **accepted for the pilot** per the plan's gate ("FAIL = re-tune camera or accept stylistic occlusion").
+- The constant angle gives clean tileability (no per-tile seams), which matters for the eventual seamless map (Output A).
+- **Option A (per-tile elevation from the box vertical half-axis) is deferred** to the full-territory pass, and only IF specific dense tiles (Mid-Levels / ICC / IFC) prove unacceptable. The `central_pilot_fetch.py` walk already exposes each tile's box; wiring `view_height` per-tile from `hz` is the upgrade path if needed.
+- `TARGET_HEIGHT=5` + `view_height=350` framed the buildings acceptably; harbour-edge tiles (SW/NE corners of the bbox) are correctly building-sparse, not a framing bug.

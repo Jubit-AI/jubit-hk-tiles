@@ -9,6 +9,7 @@ Lands Dept 3D open data — these PNGs are committed only as a visual reference.
 
 | Image | What it shows |
 |---|---|
+| `central-seamless-map.png` | **Seamless Output-A map** — a 3×3 `--viewmap` stitch (one shared ortho projection via setViewOffset), the deep-zoom map served in `viewer/` via OpenSeaDragon. No tile seams; towers align across boundaries. |
 | `central.png` | CBD towers — dense verticality, ink contours, concrete massing |
 | `mong-kok.png` | Dense urban grid — the tuning test bed |
 | `sham-shui-po.png` | Tong-lau tenement density |

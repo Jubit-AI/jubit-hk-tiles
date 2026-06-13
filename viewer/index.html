@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yok-Iso HK — pixel map (dseek.ai/data/life)</title>
+  <style>
+    /* Parchment ground to match the Yok-Iso HK aesthetic (rice-paper #F6F1E8). */
+    html, body { margin: 0; height: 100%; background: #F6F1E8; overflow: hidden; }
+    #osd { width: 100vw; height: 100vh; background: #F6F1E8; }
+    /* Attribution — REQUIRED by the HK Lands Dept open-data terms. Do not remove. */
+    #attribution {
+      position: fixed; left: 12px; bottom: 10px; z-index: 10;
+      font: 11px/1.4 -apple-system, system-ui, sans-serif;
+      color: #5a5145; background: rgba(246, 241, 232, 0.82);
+      border: 1px solid #c9c2b6; border-radius: 6px; padding: 6px 10px;
+      max-width: 60ch; pointer-events: none;
+    }
+    #attribution b { color: #1f1a17; }
+    #title {
+      position: fixed; left: 12px; top: 10px; z-index: 10;
+      font: 600 13px/1.2 -apple-system, system-ui, sans-serif; color: #1f1a17;
+      background: rgba(246, 241, 232, 0.82); border: 1px solid #c9c2b6;
+      border-radius: 6px; padding: 6px 10px; letter-spacing: 0.2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="title">Yok-Iso HK · soft isometric parchment city</div>
+  <div id="osd"></div>
+  <div id="attribution">
+    Building data © <b>The Government of the Hong Kong SAR (Lands Department)</b>,
+    via <b>DATA.GOV.HK</b>. Rendered &amp; stylised by Jubit (Yok-Iso HK).
+    Tiles are a derived work; not for resale as a standalone dataset.
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+  <script>
+    // DZI source: ?dzi=<path> (default the bundled Central sample).
+    const params = new URLSearchParams(location.search);
+    const dzi = params.get("dzi") || "central.dzi";
+    OpenSeadragon({
+      id: "osd",
+      prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+      tileSources: dzi,
+      showNavigator: true,
+      navigatorPosition: "BOTTOM_RIGHT",
+      backgroundColor: "#F6F1E8",
+      minZoomImageRatio: 0.6,
+      maxZoomPixelRatio: 3.0,
+      gestureSettingsMouse: { clickToZoom: false },
+      // pixel-art-friendly: keep edges crisp when zoomed past native res
+      imageSmoothingEnabled: false,
+    });
+  </script>
+</body>
+</html>

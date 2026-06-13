@@ -206,3 +206,7 @@ layers/*
 
 # render-half build artifacts (PNG tiles)
 scripts/out/
+
+# Generated DZI pyramids (regenerable via scripts/make_dzi.py)
+viewer/*_files/
+viewer/*.dzi

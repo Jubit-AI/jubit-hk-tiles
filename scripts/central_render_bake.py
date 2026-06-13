@@ -184,11 +184,21 @@ def main() -> int:
                     viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
                 )
                 page = ctx.new_page()
+                # Per-tile texture-failure tracker. With the transcoder hosted
+                # locally these should be empty; if a "Couldn't load texture"
+                # slips through we surface it (Rule: fail loud) instead of
+                # silently saving a whitebox PNG.
+                tex_errors: list[str] = []
+
+                def _on_console(m, _bucket=tex_errors):
+                    if m.type in ("error", "warning"):
+                        print(f"   [browser:{m.type}] {m.text[:160]}")
+                    if "Couldn't load texture" in m.text or "KTX2" in m.text:
+                        _bucket.append(m.text[:120])
+
                 # Capture browser console + errors — catches CORS / WebGL failures
-                # (the blueprint's top risks). Only print warnings/errors to stay quiet.
-                page.on("console", lambda m: (
-                    print(f"   [browser:{m.type}] {m.text[:160]}")
-                    if m.type in ("error", "warning") else None))
+                # (the blueprint's top risks) and texture-transcode failures.
+                page.on("console", _on_console)
                 page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
                 url = f"http://localhost:{PORT}/?{q}"
                 page.goto(url, wait_until="networkidle")
@@ -202,11 +212,40 @@ def main() -> int:
                 # transcode asynchronously after that — screenshotting immediately
                 # catches untextured (whitebox) buildings. Settle so textures land.
                 page.wait_for_timeout(args.settle_ms)
+                # Gate on the TRUE signal — the actual textured-mesh inventory from
+                # the live scene — NOT the noisy console (a single transient
+                # "Couldn't load texture" from a tile culled mid-settle is harmless
+                # when 51/51 meshes end up textured). A real whitebox = a large
+                # untextured fraction or a transcoder-init failure.
+                inv = page.evaluate("""() => {
+                  const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
+                  const root = window.__scene;
+                  if (!root) { out.noScene = true; return out; }
+                  root.traverse(o => {
+                    if (!o.isMesh) return;
+                    out.total++;
+                    const mats = Array.isArray(o.material) ? o.material : [o.material];
+                    if (!mats.some(m => m && m.map)) out.noMap++;
+                  });
+                  return out;
+                }""")
                 out_path = out_dir / f"{label}.png"
                 page.screenshot(path=str(out_path))
                 size = out_path.stat().st_size
-                status = "ok" if loaded else "timeout"
-                print(f"   {'✅' if loaded else '⚠️ '} {label}.png "
+                total = inv.get("total", 0)
+                no_map = inv.get("noMap", 0)
+                untex_frac = (no_map / total) if total else 1.0
+                tex_note = f"{total - no_map}/{total} tex"
+                if not loaded:
+                    status, icon = "timeout", "⚠️ "
+                elif inv.get("initFailed") or untex_frac > 0.20:
+                    status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
+                    failed += 1
+                else:
+                    status, icon = f"ok {tex_note}", "✅"
+                    if tex_errors:
+                        status += f" ({len(tex_errors)} transient)"
+                print(f"   {icon} {label}.png "
                       f"({lat:.4f},{lon:.4f}) vh={view_h:.0f} {size//1024}KB [{status}]")
                 saved += 1
                 page.close()

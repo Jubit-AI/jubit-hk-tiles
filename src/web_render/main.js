@@ -188,22 +188,43 @@ function init() {
   tiles.registerPlugin(new TileCompressionPlugin());
   // HK b3dm textures are KTX2/BasisU-compressed — without a KTX2 loader every
   // tile throws "setKTX2Loader must be called before loading KTX2 textures" and
-  // renders untextured/empty. detectSupport(renderer) picks the GPU's format;
-  // transcoder path pinned to the installed three (0.181.2).
+  // renders untextured/empty. detectSupport(renderer) picks the GPU's format.
+  //
+  // The basis transcoder is served LOCALLY from public/basis/ (copied from the
+  // installed three@0.181.2) rather than a remote unpkg CDN. A bake renders many
+  // tiles, each in a fresh browser context that re-fetches the transcoder; per-
+  // context CDN round-trips are slow and a CDN hiccup can reject the transcode.
+  // Local hosting = no network dependency, faster, offline, deterministic.
+  // (Vite root is src/web_render; public/ serves at "/".)
+  const ktxLoader = new KTX2Loader()
+    .setTranscoderPath("/basis/")
+    .detectSupport(renderer);
+  // Pre-warm the transcoder so the first transcode is deterministic and an init
+  // failure surfaces LOUDLY (window.KTX2_INIT_FAILED) instead of silently
+  // emitting whiteboxes — the bake gate refuses to save on init failure.
+  ktxLoader.init().catch((e) => {
+    console.error("KTX2 transcoder failed to init:", e);
+    window.KTX2_INIT_FAILED = true;
+  });
+  // DRACO decoder stays on the CDN path: the HK building tileset is NOT Draco-
+  // compressed (b3dm extensionsUsed = ["KHR_texture_basisu"] only), so this
+  // loader never actually fetches for these tiles — kept for format-completeness.
   tiles.registerPlugin(
     new GLTFExtensionsPlugin({
       dracoLoader: new DRACOLoader().setDecoderPath(
         "https://unpkg.com/three@0.181.2/examples/jsm/libs/draco/gltf/"
       ),
-      ktxLoader: new KTX2Loader()
-        .setTranscoderPath("https://unpkg.com/three@0.181.2/examples/jsm/libs/basis/")
-        .detectSupport(renderer),
+      ktxLoader,
     })
   );
 
   // Rotate tiles so Z-up becomes Y-up (Three.js convention)
   tiles.group.rotation.x = -Math.PI / 2;
   scene.add(tiles.group);
+
+  // Headless-debug hooks: let the bake/probe inspect texture state from the page.
+  window.__tiles = tiles;
+  window.__scene = scene;
 
   // Setup GlobeControls
   controls = new GlobeControls(

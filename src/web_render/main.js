@@ -46,6 +46,18 @@ const PALETTE_MIX = urlParams.has("palette") ? parseFloat(urlParams.get("palette
 // identity layer). Screenshot with omit_background to keep the transparency.
 const TRANSPARENT = urlParams.get("transparent") === "true";
 
+// SEAMLESS MAP tiling (Output A). When tile_cols/tile_rows are present, the
+// ortho camera covers the FULL map (lat/lon = map centre, view_height = the
+// whole grid's view-plane height) and each tile is a setViewOffset window into
+// that ONE shared projection — so tiles stitch perfectly and a tower straddling
+// a boundary renders its top in the tile above + base below, aligned (no blend,
+// no spacing calibration). Tile (tile_col,tile_row) is rendered; 0,0 = top-left.
+const TILE_COLS = parseInt(urlParams.get("tile_cols")) || 1;
+const TILE_ROWS = parseInt(urlParams.get("tile_rows")) || 1;
+const TILE_COL = parseInt(urlParams.get("tile_col")) || 0;
+const TILE_ROW = parseInt(urlParams.get("tile_row")) || 0;
+const MAP_TILING = TILE_COLS > 1 || TILE_ROWS > 1;
+
 // Configuration with URL param overrides
 const CANVAS_WIDTH = parseInt(urlParams.get("width")) || view.width_px;
 const CANVAS_HEIGHT = parseInt(urlParams.get("height")) || view.height_px;
@@ -347,9 +359,15 @@ function positionCamera() {
   // In whitebox.py, the camera is positioned so the focal point (0,0,0) is in the CENTER of the screen.
   // (0,0,0) corresponds to the lat/lon in view.json.
 
+  // When tiling a seamless map, VIEW_HEIGHT_METERS is the FULL grid's view-plane
+  // height and the frustum aspect is the FULL grid (cols×canvas)/(rows×canvas);
+  // setViewOffset then crops to this one tile. Otherwise it's a single framed view.
   const frustumHeight = VIEW_HEIGHT_METERS;
   const halfHeight = frustumHeight / 2;
-  const halfWidth = halfHeight * aspect;
+  const fullAspect = MAP_TILING
+    ? (TILE_COLS * CANVAS_WIDTH) / (TILE_ROWS * CANVAS_HEIGHT)
+    : aspect;
+  const halfWidth = halfHeight * fullAspect;
 
   console.log(`📐 Frustum: height=${frustumHeight}m`);
 
@@ -361,6 +379,17 @@ function positionCamera() {
 
   // Reset zoom to 1.0 to ensure strict 1:1 scale with world units
   ortho.zoom = 1.0;
+  if (MAP_TILING) {
+    // Window into the shared full-map projection — seamless by construction.
+    ortho.setViewOffset(
+      TILE_COLS * CANVAS_WIDTH, TILE_ROWS * CANVAS_HEIGHT,
+      TILE_COL * CANVAS_WIDTH, TILE_ROW * CANVAS_HEIGHT,
+      CANVAS_WIDTH, CANVAS_HEIGHT
+    );
+    console.log(`🧩 setViewOffset tile (${TILE_COL},${TILE_ROW}) of ${TILE_COLS}×${TILE_ROWS}`);
+  } else {
+    ortho.clearViewOffset();
+  }
   ortho.updateProjectionMatrix();
 
   // Shift the camera to center the target point

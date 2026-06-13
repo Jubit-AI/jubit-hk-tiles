@@ -130,7 +130,7 @@ The HK Jubuddy theme is built in four separable layers, each with its own produc
 **HK creature roster (Pictorial-Book × HK roles):** ferry piglet · neon yokai imp · paper-air spirit · gate mimic · flower-spirit crab · cloud dragonling. (Stay on the character pipeline; the city is their stage, never rendered by the city pipeline.)
 
 ## Deferred follow-ups
-- **Seamless map calibration** (Output A): the naive `map_grid` stitch (PR — seam test) leaves gaps — the ground-coverage-per-tile estimate (footprint/sin θ) is too large, so tiles space too far apart. Calibrate the real ground coverage (measure from a known-scale render), then expect a residual building-overhang seam needing an overlap-blend pass (the isometric-nyc hard 90%). Tracked before the DZI/OpenSeaDragon viewer.
+- ✅ **Seamless map — SOLVED** (Output A): the move-the-camera `map_grid` left gaps; replaced by `--viewmap` = ONE shared ortho projection sub-tiled via `camera.setViewOffset()`. Every tile is a viewport window into the same projection, so tiles stitch perfectly AND a tower straddling a boundary aligns across tiles (no gaps, no spacing calibration, no overlap-blend — the isometric-nyc "hard 90%" dissolved by construction). Proven on a 3×3 raw Central stitch. Remaining for the map: (a) per-tile soft-stylise contour can leave faint seam lines → style the *stitched* image (or render raw → stitch → style → DZI); (b) the DZI/OpenSeaDragon deep-zoom viewer; (c) LOD tuning at territory scale.
 - AO pass (EffectComposer SAO/SSAO) for the in-crease shadow.
 - Night/neon emissive axis in the renderer (the 6% teal-neon day↔night ignite).
 - 45° azimuth experiment (exactly-3-faces) vs the current −15°.

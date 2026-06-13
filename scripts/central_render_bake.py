@@ -88,6 +88,21 @@ def map_grid(center_lat, center_lon, cols, rows, footprint_m, elevation_deg, azi
             yield f"r{r}_c{c}", lat0 - r * dlat, lon0 + c * dlon, footprint_m
 
 
+def viewmap_tiles(center_lat, center_lon, cols, rows, view_height_m):
+    """Seamless map tiles via the renderer's setViewOffset (THE seamless method).
+
+    Every tile shares ONE ortho projection (center lat/lon = map centre,
+    view_height = the FULL grid's view-plane height); each tile is a viewport
+    window (tile_col,tile_row) into it. Tiles stitch perfectly and a tower
+    straddling a boundary aligns across tiles — no spacing calibration, no blend.
+    Yields 5-tuples: (label, lat, lon, view_height, extra_url_params).
+    """
+    for r in range(rows):
+        for c in range(cols):
+            yield (f"r{r}_c{c}", center_lat, center_lon, view_height_m,
+                   {"tile_cols": cols, "tile_rows": rows, "tile_col": c, "tile_row": r})
+
+
 def named_locations(locations_path: Path):
     """Yield (id, lat, lon, view_height_m) for each renderable named location.
 
@@ -177,14 +192,24 @@ def main() -> int:
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")
     parser.add_argument("--map", type=str, default=None,
-                        help="seamless deep-zoom MAP grid: 'lat,lon,cols,rows,footprint_m' "
-                             "(spacing == ground coverage so tiles abut). Use azimuth 0. "
-                             "Tiles named r{row}_c{col} for stitching (scripts/stitch_grid.py).")
+                        help="[superseded by --viewmap] move-camera grid: "
+                             "'lat,lon,cols,rows,footprint_m'. Leaves seams; kept for reference.")
+    parser.add_argument("--viewmap", type=str, default=None,
+                        help="SEAMLESS deep-zoom map via setViewOffset: 'lat,lon,cols,rows,"
+                             "view_height_m' — one shared ortho projection, each tile a viewport "
+                             "window. Perfectly stitchable (scripts/stitch_grid.py). Tiles "
+                             "r{row}_c{col}. view_height_m = the WHOLE grid's view-plane height.")
     args = parser.parse_args()
     az, el = args.azimuth, args.elevation
 
-    # Choose tile source: seamless map grid, named locations, or pilot grid.
-    if args.map:
+    # Choose tile source: seamless viewmap, (legacy) move-camera map, named, pilot.
+    if args.viewmap:
+        clat, clon, cols, rows, vh = args.viewmap.split(",")
+        tiles = list(viewmap_tiles(float(clat), float(clon), int(cols), int(rows), float(vh)))
+        out_dir = REPO / "scripts" / "out" / (args.out_dir or "viewmap")
+        print(f"🧩 seamless viewmap: {cols}×{rows} via setViewOffset, "
+              f"center ({clat},{clon}), full view_height={vh}m, el={el} az={az}")
+    elif args.map:
         clat, clon, cols, rows, fp = args.map.split(",")
         tiles = list(map_grid(float(clat), float(clon), int(cols), int(rows),
                               float(fp), el, az))
@@ -210,12 +235,15 @@ def main() -> int:
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True, args=launch_args)
-            for label, lat, lon, view_h in tiles:
+            for tile in tiles:
+                label, lat, lon, view_h = tile[:4]
+                extra = tile[4] if len(tile) > 4 else {}
                 params = {
                     "export": "true", "lat": lat, "lon": lon,
                     "width": WIDTH, "height": HEIGHT,
                     "azimuth": az, "elevation": el, "view_height": view_h,
                 }
+                params.update(extra)  # e.g. setViewOffset tile_col/row/cols/rows
                 if args.style == "soft":
                     params["style"] = "soft"
                     if args.pixel is not None:

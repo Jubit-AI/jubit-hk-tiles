@@ -28,7 +28,10 @@ const SoftStyliseShader = {
     uWarm: { value: 1.0 },          // warm-grade strength
     uGrain: { value: 1.0 },         // rice-paper grain strength
     uEdge: { value: 1.0 },          // soft-graffiti contour strength
-    uPixelSize: { value: 4.0 },     // mosaic block in screen px (pixel-art read)
+    // "Yok-Iso HK: soft isometric parchment city" — soft diorama, NOT crunchy
+    // retro pixel-art. Default uPixelSize 1.0 = clean native edges (no mosaic).
+    // Set >1 only for an optional chunky pixel variant; the shipped look is soft.
+    uPixelSize: { value: 1.0 },     // mosaic block in screen px (1 = off / clean)
     uPaletteMix: { value: 0.85 },   // 0=off, 1=full snap to the 15-colour Yok palette
   },
   vertexShader: /* glsl */ `
@@ -96,22 +99,25 @@ const SoftStyliseShader = {
       // the massing more tonal punch than a 0.40 floor (which washed pale).
       float bands = uCelBands;
       float banded = floor(lum * bands + 0.5) / bands;
-      float lifted = 0.33 + 0.67 * banded;
+      float lifted = 0.30 + 0.70 * banded;
       col *= lifted / max(lum, 1e-3);
 
       // 2. Warm rice-paper grade.
       col *= mix(vec3(1.0), vec3(1.06, 1.01, 0.92), uWarm);
 
-      // 3. Soft contour — tap at the mosaic step so the ink line is pixel-aligned.
-      vec2 step = uPixelSize / uResolution;
-      float lr = luma(texture2D(tDiffuse, puv + vec2(step.x, 0.0)).rgb);
-      float ld = luma(texture2D(tDiffuse, puv + vec2(0.0, step.y)).rgb);
-      float edge = clamp((abs(lum - lr) + abs(lum - ld)) * 3.0, 0.0, 1.0);
-      col *= 1.0 - 0.24 * edge * uEdge;
+      // 3. Restrained pixel-sharp contour — fixed ~1.5px tap (independent of the
+      // mosaic) so a crisp ink outline defines every form in the soft-clean look
+      // (the mosaic used to supply this; at uPixelSize 1 it must be explicit).
+      vec2 estep = 1.5 / uResolution;
+      float lr = luma(texture2D(tDiffuse, puv + vec2(estep.x, 0.0)).rgb);
+      float ld = luma(texture2D(tDiffuse, puv + vec2(0.0, estep.y)).rgb);
+      float edge = clamp((abs(lum - lr) + abs(lum - ld)) * 4.0, 0.0, 1.0);
+      col *= 1.0 - 0.32 * edge * uEdge;
 
-      // 4. Rice-paper grain, per mosaic cell (stable).
-      float g = hash(floor(vUv * grid));
-      col *= mix(1.0, 0.96 + 0.04 * g, uGrain);
+      // 4. Rice-paper grain, on a FIXED ~2px paper cell (decoupled from the
+      // mosaic so the parchment texture stays subtle even at uPixelSize 1).
+      float g = hash(floor(vUv * uResolution / 2.0));
+      col *= mix(1.0, 0.965 + 0.035 * g, uGrain);
 
       // 5. Snap to the Yok palette (limited-palette = pixel-art + Jubit colours).
       col = mix(col, snapYok(clamp(col, 0.0, 1.0)), uPaletteMix);

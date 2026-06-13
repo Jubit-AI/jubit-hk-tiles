@@ -27,12 +27,23 @@ One shared deterministic Stage-1 render (Three.js orthographic camera over HK Ce
 - ✅ Add `scripts/request-hk-api-key.md` — email template (operator action)
 - ✅ Add `src/isometric_nyc/data/hk_lands_dept.py` — stubbed HK Cesium 3D Tiles adapter, ready for the API key
 
-### Week 2 — Central pilot render *(blocked on HK API key)*
+### Week 2 — Central pilot render *(API key obtained + validated 2026-06-13)*
 
-- ⬜ Operator sends API key request (`scripts/request-hk-api-key.md`)
-- ⬜ Wire `hk_lands_dept.py` to fetch Central tileset.json
-- ⬜ Run Stage 1 (deterministic Three.js orthographic render) on Central tiles
-- ⬜ **Verification gate**: visually inspect ~20 Central tiles. PASS = tiles look acceptable; FAIL = re-tune camera or accept stylistic occlusion. See `docs/qa/verticality.md`.
+**Data half — ✅ DONE (verified against live API):**
+- ✅ API key obtained, stored in gitignored `.env.local` (`HK_LANDSD_API_KEY`)
+- ✅ `hk_lands_dept.py` wired to the live building tileset (asset v1.0, tilesetVersion 1.2.3, root.geometricError 58569.59)
+- ✅ `scripts/central_pilot_fetch.py` walks the tile tree + resolves + probes content URIs
+- ✅ **Proven**: real `b3dm` textured building geometry pulls for Central — probed leaf tiles returned HTTP 200, `magic='b3dm'`, 140–170 KB each. Data-half gate **PASS**.
+
+**Data-half findings (carry into the render layer):**
+- HK tiles use **`box` bounding volumes** (ECEF center + half-axes), NOT geographic `region`. Root carries a `transform`; refinement is `REPLACE`; root has 44 children.
+- ⚠️ **Bbox cropping refinement needed**: because volumes are `box`, a cheap lat/lng intersection test can't precisely crop to a district (the pilot's loose filter descended the whole subtree → inflated "162K matched" count, which is "tiles in subtree", not "tiles in Central"). Before full-territory batching we need to decode the box (ECEF center + half-axes) + apply the root `transform`, then test against the district bbox in ECEF — OR crop at render time via the camera frustum. Tracked for the render layer.
+
+**Render half — ⬜ NEXT (the genuinely new code, multi-day):**
+- ⬜ Headless Three.js + `3d-tiles-renderer` loads the HK `b3dm` tiles
+- ⬜ Orthographic camera at isometric angle; per-tile angle per `docs/qa/verticality.md` Option A
+- ⬜ Export PNG quadrants + metadata for the Central bbox
+- ⬜ **Verification gate**: visually inspect ~20 Central tiles. PASS = tiles look acceptable; FAIL = re-tune camera or accept stylistic occlusion.
 
 ### Week 3–4 — Jubit aesthetic fine-tune
 

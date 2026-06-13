@@ -6,6 +6,17 @@
 
 This welds the city tiles to the Codex character line: both paint from the same swatches, same paper grain, same light, same single soft-graffiti contour rule. Built on `jubuddy-game` `prompt-themes/yok.ts` (palette/texture), `arcane.ts` (environment/lighting), `buddy-core/tokens` (mascot/brand), and the production-asset taste rubric (read-first / chunky-silhouette / quiet-center).
 
+## 0. The locked LoRA contract
+
+| Constant | Value | Where |
+|---|---|---|
+| **Trigger token** | `<jubit hk soft iso>` | `inference/train.py` `HK_TRIGGER_TOKEN`; generation prompts must emit it verbatim once trained (checklist #11-14) |
+| **LoRA model id** | `jubit-hk-soft-iso` | `train.py` `HK_LORA_MODEL_ID`; served via `server.py` `LORA_MODEL_ID` |
+| **Modal volume** | `hk-tiles-lora-vol` | LoRA saved to `/data/loras/jubit-hk-soft-iso/`; `server.py` loads from the same volume (checklist #6) |
+| **Base model** | `Qwen/Qwen-Image-Edit` | unchanged from upstream |
+
+**LOCKED 2026-06-13.** The token is a one-line contract the LoRA + every generation prompt must agree on — changing it means retraining. `inference/train.py` is the fine-tune entrypoint (was missing); it trains the 40-pair set (§5) to respond to this token and saves to the volume `server.py` reads.
+
 ## 1. Palette — 70/20/8/2 budget
 
 **Base (70%)** — warm sun-bleached HK (SC2K warmth, no SC2K brown ground):

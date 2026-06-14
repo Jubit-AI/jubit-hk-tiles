@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>jubuddy-HK — isometric TD board (Yok-Iso)</title>
   <style>
-    html,body{margin:0;height:100%;background:#F6F1E8;overflow:hidden;
+    html,body{margin:0;height:100%;background:#F3E7CF;overflow:hidden;
       font:13px/1.4 -apple-system,system-ui,sans-serif;color:#1f1a17;}
     #wrap{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
     canvas{image-rendering:pixelated;}
@@ -30,7 +30,7 @@
     <div><span class="sw" style="background:#EFE7D8"></span>path (enemy lane)</div>
     <div><span class="sw" style="background:#C9C2B6"></span>slot (tower pad)</div>
     <div><span class="sw" style="background:#8A8378"></span>blocked</div>
-    <div><span class="sw" style="background:#B64734"></span>spawn &nbsp;<span class="sw" style="background:#14B8A6"></span>goal</div>
+    <div><span class="sw" style="background:#B64734"></span>spawn &nbsp;<span class="sw" style="background:#1F6F73"></span>goal</div>
   </div>
   <div id="wrap"><canvas id="cv"></canvas></div>
   <div id="foot">
@@ -143,7 +143,7 @@
     ctx.fillStyle = "#8A8378"; ctx.fillRect(x-13*S, y-34*S, 26*S, 30*S);
     ctx.fillStyle = "#C9C2B6"; ctx.fillRect(x-13*S, y-34*S, 9*S, 30*S);
     ctx.fillStyle = "#C7A25B"; ctx.fillRect(x-15*S, y-40*S, 30*S, 8*S); // gold cap
-    ctx.fillStyle = "#14B8A6"; ctx.beginPath(); ctx.arc(x, y-22*S, 5*S, 0, 7); ctx.fill();
+    ctx.fillStyle = "#1F6F73"; ctx.beginPath(); ctx.arc(x, y-22*S, 5*S, 0, 7); ctx.fill();
   }
   function drawEnemy(e){
     const p = enemyPos(e);
@@ -152,7 +152,7 @@
     ctx.fillStyle = "#EFE7D8"; ctx.beginPath(); ctx.arc(p.x-3, p.y-3, 3, 0, 7); ctx.fill();
     // hp bar
     ctx.fillStyle="#1f1a17"; ctx.fillRect(p.x-12, p.y-20, 24, 4);
-    ctx.fillStyle="#14B8A6"; ctx.fillRect(p.x-12, p.y-20, 24*(e.hp/e.maxhp), 4);
+    ctx.fillStyle="#1F6F73"; ctx.fillRect(p.x-12, p.y-20, 24*(e.hp/e.maxhp), 4);
   }
   function render(){
     ctx.clearRect(0,0,cv.width,cv.height);

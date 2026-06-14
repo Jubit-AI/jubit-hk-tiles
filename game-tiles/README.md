@@ -9,7 +9,7 @@ asset **producer**; the jubuddy-HK game (a later spin-off from jubuddy-game) is 
 | Layer | Dir | Source | Role |
 |---|---|---|---|
 | **Ground / gameplay** | `iso/` | `scripts/make_ground_tiles.py` (deterministic) | clean, reusable, instantly readable board tiles — gameplay legibility always wins |
-| **Identity props** | (bake) | `central_render_bake.py --transparent` → hand-clean | HK landmarks as transparent sprites, dropped onto the ground |
+| **Identity props** | `props/` | `central_render_bake.py --transparent` → hand-clean | HK landmarks as transparent sprites, dropped onto the ground |
 
 The ground layer is **hand-authored / deterministic** — NOT from the city AI/bake
 pipeline (which is worst at repeated game tiles). HK-ness comes from props on clean

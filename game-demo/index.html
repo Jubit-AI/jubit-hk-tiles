@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jubuddy-HK — isometric TD board (Yok-Iso)</title>
+  <style>
+    html,body{margin:0;height:100%;background:#F6F1E8;overflow:hidden;
+      font:13px/1.4 -apple-system,system-ui,sans-serif;color:#1f1a17;}
+    #wrap{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
+    canvas{image-rendering:pixelated;}
+    #hud{position:fixed;left:12px;top:10px;background:rgba(246,241,232,.85);
+      border:1px solid #c9c2b6;border-radius:8px;padding:8px 12px;z-index:5;}
+    #hud b{letter-spacing:.2px}
+    #legend{position:fixed;right:12px;top:10px;background:rgba(246,241,232,.85);
+      border:1px solid #c9c2b6;border-radius:8px;padding:8px 12px;z-index:5;font-size:12px;}
+    #legend .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;border:1px solid #1f1a17;}
+    #foot{position:fixed;left:12px;bottom:10px;background:rgba(246,241,232,.82);
+      border:1px solid #c9c2b6;border-radius:6px;padding:6px 10px;z-index:5;font-size:11px;color:#5a5145;max-width:64ch;}
+    #foot b{color:#1f1a17}
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>jubuddy-HK · isometric TD board</b><br>
+    <span id="stat">HP 20 · wave 1 · coins 120</span><br>
+    <span style="color:#5a5145">click a <b>slot</b> (gold ring) to place a tower</span>
+  </div>
+  <div id="legend">
+    <div><span class="sw" style="background:#EFE7D8"></span>path (enemy lane)</div>
+    <div><span class="sw" style="background:#C9C2B6"></span>slot (tower pad)</div>
+    <div><span class="sw" style="background:#8A8378"></span>blocked</div>
+    <div><span class="sw" style="background:#B64734"></span>spawn &nbsp;<span class="sw" style="background:#14B8A6"></span>goal</div>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas></div>
+  <div id="foot">
+    Ground tiles + HK prop rendered from HK Lands Dept open data (DATA.GOV.HK),
+    <b>Yok-Iso HK</b> style. Proof of the jubuddy-HK isometric renderer path:
+    real ground TileKinds + an identity prop, live TD loop on one shared core.
+  </div>
+
+  <script>
+  // ── Assets (committed: ground tiles + one HK prop) ─────────────────────────
+  const TILE_KINDS = ["empty","path","slot","blocked","spawn","goal"];
+  const BASE = "/game-tiles/iso/";            // served from repo root
+  const PROP_SRC = "/game-tiles/props/prop-mongkok-block.png";
+  const IMG_W = 256, IMG_H = 160, DIA_CX = 128, DIA_CY = 80, DIA_H = 128; // PNG geometry
+  const S = 0.58;                              // draw scale
+  const HW = DIA_CX * S, HH = (DIA_H / 2) * S; // half-width / half-diamond-height steps
+
+  // ── Board (a hand-authored district board — Output G pilot) ────────────────
+  const COLS = 8, ROWS = 8;
+  const PATH = [[0,3],[1,3],[2,3],[2,2],[3,2],[4,2],[4,3],[4,4],[5,4],[6,4],[7,4]];
+  const SLOTS = [[1,2],[3,1],[3,3],[5,3],[5,5],[6,3],[1,4]];
+  const BLOCKED = [[2,5],[6,1],[0,6]];
+  const SPAWN = PATH[0], GOAL = PATH[PATH.length-1];
+
+  function kindAt(c,r){
+    if (c===SPAWN[0]&&r===SPAWN[1]) return "spawn";
+    if (c===GOAL[0]&&r===GOAL[1]) return "goal";
+    if (PATH.some(p=>p[0]===c&&p[1]===r)) return "path";
+    if (SLOTS.some(p=>p[0]===c&&p[1]===r)) return "slot";
+    if (BLOCKED.some(p=>p[0]===c&&p[1]===r)) return "blocked";
+    return "empty";
+  }
+
+  // ── Iso projection ─────────────────────────────────────────────────────────
+  const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  let OX = 0, OY = 0;
+  function sizeCanvas(){
+    const w = (COLS+ROWS)*HW + IMG_W*S, h = (COLS+ROWS)*HH + IMG_H*S;
+    cv.width = Math.ceil(w); cv.height = Math.ceil(h);
+    OX = cv.width/2; OY = 40;
+  }
+  const cellCenter = (c,r)=>({ x: OX + (c-r)*HW, y: OY + (c+r)*HH + DIA_CY*S });
+
+  // ── Game state ─────────────────────────────────────────────────────────────
+  const imgs = {};
+  let prop = null;
+  const towers = [];          // {c,r,cool}
+  const enemies = [];         // {t, hp, maxhp, x, y, dead}
+  const shots = [];           // {x,y,tx,ty,life}
+  let hp = 20, coins = 120, wave = 1, spawnTimer = 0, spawned = 0, frame = 0;
+  // auto-place two towers so the loop is alive on load
+  const AUTO = [[3,3],[5,3]];
+
+  function pathPoints(){ return PATH.map(([c,r])=>cellCenter(c,r)); }
+  let PP = [];
+
+  function spawnEnemy(){ enemies.push({ t: 0, hp: 6, maxhp: 6, dead:false, x:0, y:0 }); }
+
+  function enemyPos(e){
+    // interpolate along PP by t in [0, PP.length-1]
+    const seg = Math.min(Math.floor(e.t), PP.length-2);
+    const f = e.t - seg;
+    const a = PP[seg], b = PP[seg+1];
+    return { x: a.x+(b.x-a.x)*f, y: a.y+(b.y-a.y)*f - 14*S }; // lift off the tile
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function drawTile(c,r){
+    const k = kindAt(c,r);
+    const ctr = cellCenter(c,r);
+    ctx.drawImage(imgs[k], ctr.x - DIA_CX*S, ctr.y - DIA_CY*S, IMG_W*S, IMG_H*S);
+  }
+  function drawTower(t){
+    const ctr = cellCenter(t.c,t.r);
+    const x = ctr.x, y = ctr.y - 6;
+    // chunky designer-toy tower: ink body, gold cap, teal eye (Yok accents)
+    ctx.fillStyle = "#1f1a17";
+    ctx.beginPath(); ctx.ellipse(x, y, 20*S, 11*S, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = "#8A8378"; ctx.fillRect(x-13*S, y-34*S, 26*S, 30*S);
+    ctx.fillStyle = "#C9C2B6"; ctx.fillRect(x-13*S, y-34*S, 9*S, 30*S);
+    ctx.fillStyle = "#C7A25B"; ctx.fillRect(x-15*S, y-40*S, 30*S, 8*S); // gold cap
+    ctx.fillStyle = "#14B8A6"; ctx.beginPath(); ctx.arc(x, y-22*S, 5*S, 0, 7); ctx.fill();
+  }
+  function drawEnemy(e){
+    const p = enemyPos(e);
+    ctx.fillStyle = "#1f1a17"; ctx.beginPath(); ctx.ellipse(p.x, p.y+12*S, 12*S, 6*S, 0,0,7); ctx.fill();
+    ctx.fillStyle = "#B64734"; ctx.beginPath(); ctx.arc(p.x, p.y, 11*S, 0, 7); ctx.fill();
+    ctx.fillStyle = "#EFE7D8"; ctx.beginPath(); ctx.arc(p.x-3, p.y-3, 3, 0, 7); ctx.fill();
+    // hp bar
+    ctx.fillStyle="#1f1a17"; ctx.fillRect(p.x-12, p.y-20, 24, 4);
+    ctx.fillStyle="#14B8A6"; ctx.fillRect(p.x-12, p.y-20, 24*(e.hp/e.maxhp), 4);
+  }
+  function render(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    // tiles back-to-front (row-major = iso depth order)
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) drawTile(c,r);
+    // HK identity prop on a decorative blocked cell (props-on-clean-ground)
+    if(prop){ const ctr=cellCenter(0,6); const pw=IMG_W*S*0.9, ph=prop.height*(pw/prop.width);
+      ctx.drawImage(prop, ctr.x-pw/2, ctr.y-ph+DIA_CY*S*0.7, pw, ph); }
+    // depth-sort dynamic actors by screen y
+    const actors = [...towers.map(t=>({y:cellCenter(t.c,t.r).y,d:()=>drawTower(t)})),
+                    ...enemies.filter(e=>!e.dead).map(e=>({y:enemyPos(e).y,d:()=>drawEnemy(e)}))];
+    actors.sort((a,b)=>a.y-b.y).forEach(a=>a.d());
+    // shots
+    shots.forEach(s=>{ ctx.strokeStyle="#C7A25B"; ctx.lineWidth=2*S; ctx.beginPath();
+      ctx.moveTo(s.x,s.y); ctx.lineTo(s.tx,s.ty); ctx.stroke(); });
+  }
+
+  // ── Update (a minimal but real TD loop) ────────────────────────────────────
+  function update(){
+    frame++;
+    // spawn waves
+    spawnTimer--;
+    if(spawnTimer<=0 && spawned<8){ spawnEnemy(); spawned++; spawnTimer=70; }
+    // move enemies
+    for(const e of enemies){ if(e.dead) continue;
+      e.t += 0.012; const p=enemyPos(e); e.x=p.x; e.y=p.y;
+      if(e.t>=PP.length-1){ e.dead=true; hp=Math.max(0,hp-1); }
+    }
+    // towers fire
+    for(const t of towers){ t.cool=(t.cool||0)-1;
+      if(t.cool>0) continue;
+      const tc=cellCenter(t.c,t.r);
+      const target=enemies.find(e=>!e.dead && Math.hypot(e.x-tc.x,e.y-tc.y)<150*S);
+      if(target){ target.hp-=3; t.cool=40;
+        shots.push({x:tc.x,y:tc.y-30*S,tx:target.x,ty:target.y,life:6});
+        if(target.hp<=0){ target.dead=true; coins+=5; } }
+    }
+    for(const e of enemies) if(!e.dead && e.hp<=0){ e.dead=true; }
+    shots.forEach(s=>s.life--); for(let i=shots.length-1;i>=0;i--) if(shots[i].life<=0) shots.splice(i,1);
+    // wave restart
+    if(spawned>=8 && enemies.every(e=>e.dead)){ wave++; spawned=0; spawnTimer=60; enemies.length=0; }
+    document.getElementById("stat").textContent=`HP ${hp} · wave ${wave} · coins ${coins} · towers ${towers.length}`;
+  }
+
+  function loop(){ update(); render(); requestAnimationFrame(loop); }
+
+  // ── Click to place a tower on a slot ───────────────────────────────────────
+  cv.addEventListener("click", (ev)=>{
+    const rect=cv.getBoundingClientRect();
+    const mx=(ev.clientX-rect.left)*(cv.width/rect.width);
+    const my=(ev.clientY-rect.top)*(cv.height/rect.height);
+    // find nearest slot cell to the click
+    for(const [c,r] of SLOTS){ const ctr=cellCenter(c,r);
+      if(Math.hypot(mx-ctr.x,my-ctr.y)<40 && coins>=40 && !towers.some(t=>t.c===c&&t.r===r)){
+        towers.push({c,r,cool:0}); coins-=40; return; } }
+  });
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  Promise.all(TILE_KINDS.map(k=>new Promise((res)=>{
+    const im=new Image(); im.onload=()=>{imgs[k]=im;res();}; im.onerror=()=>res(); im.src=`${BASE}iso-${k}.png`;
+  })).concat([new Promise((res)=>{ const im=new Image();
+    im.onload=()=>{prop=im;res();}; im.onerror=()=>res(); im.src=PROP_SRC; })]))
+  .then(()=>{ sizeCanvas(); PP=pathPoints(); AUTO.forEach(([c,r])=>towers.push({c,r,cool:0})); loop(); });
+  </script>
+</body>
+</html>

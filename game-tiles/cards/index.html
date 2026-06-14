@@ -12,8 +12,8 @@
     header{padding:18px 24px 4px;}
     h1{font-size:18px;margin:0 0 2px;letter-spacing:.2px;}
     .sub{color:#5a5145;font-size:12px;max-width:80ch;}
-    #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-      gap:16px;padding:18px 24px 28px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:16px;padding:14px 24px 22px;}
     .card{background:var(--off);border:1px solid var(--conc);border-radius:14px;
       overflow:hidden;box-shadow:0 1px 0 #d8cfbf;display:flex;flex-direction:column;}
     .art{aspect-ratio:1/1;background:#e9e2d4 center/cover no-repeat;position:relative;}
@@ -39,23 +39,36 @@
     <div class="sub">The IP-safe "first 12" as a new <b>location</b> card subtype (distinct from creature cards).
       Art is building-massing only (HK Copyright Ordinance §71); signage abstracted, no real logos.</div>
   </header>
-  <div id="grid"></div>
+  <div id="sets"></div>
   <footer>
     Building data © <b>The Government of the Hong Kong SAR (Lands Department)</b>, via <b>DATA.GOV.HK</b>.
     Rendered &amp; stylised by Jubit (<b>Yok-Iso HK</b>). Cards are derived works; not for resale as a standalone dataset.
   </footer>
   <script>
+  const SETS = [
+    { key: "landmark", title: "The first 12 — landmarks", sub: "heritage · nature · public infrastructure" },
+    { key: "neighbourhood", title: "Neighbourhoods & spots", sub: "district crops + iconic places" },
+  ];
+  function cardEl(l){
+    const card=document.createElement("div"); card.className="card";
+    const art=document.createElement("div");
+    if(l.art && !l.needsInfra){ art.className="art"; art.style.backgroundImage=`url(${l.art})`; }
+    else { art.className="art placeholder"; art.textContent="needs infrastructure layer"; }
+    art.innerHTML += `<span class="badge">Location</span><span class="tier ${l.ipTier}" title="IP tier: ${l.ipTier}"></span>`;
+    const body=document.createElement("div"); body.className="body";
+    body.innerHTML=`<div class="name">${l.name}</div><div class="dist">${l.district}</div><div class="blurb">${l.blurb}</div>`;
+    card.appendChild(art); card.appendChild(body); return card;
+  }
   fetch("landmarks.json").then(r=>r.json()).then(data=>{
-    const grid=document.getElementById("grid");
-    for(const l of data.landmarks){
-      const card=document.createElement("div"); card.className="card";
-      const art=document.createElement("div");
-      if(l.art && !l.needsInfra){ art.className="art"; art.style.backgroundImage=`url(${l.art})`; }
-      else { art.className="art placeholder"; art.textContent="needs infrastructure layer"; }
-      art.innerHTML += `<span class="badge">Location</span><span class="tier ${l.ipTier}" title="IP tier: ${l.ipTier}"></span>`;
-      const body=document.createElement("div"); body.className="body";
-      body.innerHTML=`<div class="name">${l.name}</div><div class="dist">${l.district}</div><div class="blurb">${l.blurb}</div>`;
-      card.appendChild(art); card.appendChild(body); grid.appendChild(card);
+    const root=document.getElementById("sets");
+    for(const s of SETS){
+      const items=data.landmarks.filter(l=>(l.set||"landmark")===s.key);
+      if(!items.length) continue;
+      const h=document.createElement("div"); h.style.cssText="padding:12px 24px 0;";
+      h.innerHTML=`<h2 style="font-size:15px;margin:0;">${s.title} <span style="color:#9a8f7e;font-weight:400;font-size:12px">(${items.length}) — ${s.sub}</span></h2>`;
+      const grid=document.createElement("div"); grid.className="grid";
+      items.forEach(l=>grid.appendChild(cardEl(l)));
+      root.appendChild(h); root.appendChild(grid);
     }
   });
   </script>

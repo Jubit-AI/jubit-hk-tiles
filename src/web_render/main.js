@@ -294,8 +294,12 @@ function init() {
     composer = createSoftStyliseComposer(
       renderer, scene, transition.camera, CANVAS_WIDTH, CANVAS_HEIGHT
     );
-    // passes[1] is the SoftStyliseShader pass; apply optional URL overrides.
-    const styliseUniforms = composer.passes[1].uniforms;
+    // Find the SoftStyliseShader pass by its uniforms (its index shifts when the
+    // optional SAO pass is inserted), then apply optional URL overrides.
+    const stylisePass = composer.passes.find(
+      (p) => p.uniforms && p.uniforms.uPixelSize
+    );
+    const styliseUniforms = stylisePass.uniforms;
     if (VECTOR) {
       // stylized-vector-illustration preset (flat graphic map look)
       styliseUniforms.uCelBands.value = 3.0;   // fewer tones → flatter regions

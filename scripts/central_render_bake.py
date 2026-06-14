@@ -175,6 +175,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
             params["pixel"] = args.pixel
         if args.palette is not None:
             params["palette"] = args.palette
+        if args.night:
+            params["night"] = "true"
     if args.transparent:
         params["transparent"] = "true"
     q = urlencode(params)
@@ -341,6 +343,9 @@ def main() -> int:
     parser.add_argument("--palette", type=float, default=None,
                         help="soft only: 0..1 snap strength to the 15-colour Yok palette "
                              "(default 0.85; 1.0 = hard hex-lock)")
+    parser.add_argument("--night", action="store_true",
+                        help="soft only: day↔night re-light — deep-harbour dusk city with "
+                             "ignited neon accents (same geometry, never a new composition)")
     parser.add_argument("--transparent", action="store_true",
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")

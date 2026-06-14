@@ -87,7 +87,7 @@ The soft-stylised look is reached **deterministically, no AI/Modal**, via a Thre
 - Enabled by `style=soft` URL param; **`scripts/central_render_bake.py --style soft` is the default** (soft-clean), with optional `--pixel N` / `--palette 0..1` overrides (and `--settle-ms` for KTX2 transcode). `--style raw` emits the unstyled render = the input the optional AI restyle would consume.
 - Tuned on dense Mong Kok (soft-clean): shadow floor 0.30 (deep concrete, not black), restrained pixel-sharp contour 0.32 on a fixed 1.5px tap, paper grain on a fixed 2px cell, `uPixelSize 1`. Reads as **soft isometric parchment-city diorama** — clean edges + form-defining ink outline, harmonised with the jubuddy-game Yok character line by shared palette + paper + light.
 - **Still deterministic** (grain keyed off screen position, not time) → identical re-renders, required for tileability.
-- Remaining gaps (candidates for the optional AI pass): semantic accent *placement* (a shader can't know which sign is the hero), the day↔night neon re-light axis, in-crease AO. The soft Yok-Iso baseline is achieved with zero AI.
+- Remaining gaps (candidates for the optional AI pass): semantic accent *placement* (a shader can't know which sign is the hero), in-crease AO. (The day↔night re-light axis is now wired — `--night`.) The soft Yok-Iso baseline is achieved with zero AI.
 
 ## 5. The 40-pair training rubric (grades every "after" image)
 
@@ -132,7 +132,8 @@ The HK Jubuddy theme is built in four separable layers, each with its own produc
 **HK creature roster (Pictorial-Book × HK roles):** ferry piglet · neon yokai imp · paper-air spirit · gate mimic · flower-spirit crab · cloud dragonling. (Stay on the character pipeline; the city is their stage, never rendered by the city pipeline.)
 
 ## Deferred follow-ups
+- ✅ **Day↔night re-light — IMPLEMENTED** (`--night` / `night=true`): the soft-stylise shader has a night branch that drops the neutral concrete city into a deep-harbour (`#0D3D46`) dusk and **ignites** the saturated accents (teal/cinnabar/jade) as neon — same geometry, never a new composition (spec §1 HK-neon / §3). Gated on chroma AND mid-low luminance so warm parchment neutrals dusk rather than glow. Neon pops most on tiles with explicit accents (game tiles, neon-canyon); residential building renders read as a moody harbour-blue night. Sample: `docs/gallery/mong-kok-night.png`. (A cool scene-key + emissive bloom multi-pass is a future deepening.)
 - ✅ **Seamless map — SOLVED** (Output A): the move-the-camera `map_grid` left gaps; replaced by `--viewmap` = ONE shared ortho projection sub-tiled via `camera.setViewOffset()`. Every tile is a viewport window into the same projection, so tiles stitch perfectly AND a tower straddling a boundary aligns across tiles (no gaps, no spacing calibration, no overlap-blend — the isometric-nyc "hard 90%" dissolved by construction). Proven on a 3×3 raw Central stitch. Remaining for the map: (a) per-tile soft-stylise contour can leave faint seam lines → style the *stitched* image (or render raw → stitch → style → DZI); (b) the DZI/OpenSeaDragon deep-zoom viewer; (c) LOD tuning at territory scale.
 - AO pass (EffectComposer SAO/SSAO) for the in-crease shadow.
-- Night/neon emissive axis in the renderer (the 6% teal-neon day↔night ignite).
+- ✅ Night/neon re-light axis — DONE (`--night`; see §7 above). Future: cool scene-key + emissive bloom multi-pass.
 - 45° azimuth experiment (exactly-3-faces) vs the current −15°.

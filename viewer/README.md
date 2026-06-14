@@ -37,6 +37,29 @@ seams). It is ONE orthographic projection of the whole area, sub-tiled with
 projection, so a tower straddling a boundary renders its top in the tile above
 and base in the tile below, exactly aligned. See `aesthetic-spec §7`.
 
+## Deploy (Vercel static — dseek.ai/data/life)
+
+`viewer/` is a self-contained static site (`index.html` + `vercel.json` + the
+generated DZI). `vercel.json` sets `immutable` cache on the tile pyramid. The DZI
+is gitignored but **is** uploaded by `vercel deploy` (it respects `.vercelignore`,
+not `.gitignore`), so generate it first (steps 1–3 above), then:
+
+```bash
+cd viewer
+
+# Preview deploy (temporary *.vercel.app URL — validate on Vercel's CDN):
+vercel deploy --yes
+
+# Production promotion to dseek.ai/data/life — run deliberately:
+#   vercel link            # link to the dseek project once
+#   vercel deploy --prod   # then alias /data/life to this deployment
+```
+
+> Scope is `m1zwell`; the dseek project is `dseek-20250516` (not yet deployed to
+> production). The production push to the public dseek.ai domain is a deliberate,
+> outward-facing step — run it yourself / confirm before going live. Keep the HK
+> Lands Dept attribution in `index.html`.
+
 ## Notes / polish backlog
 - `imageSmoothingEnabled:false` keeps zoomed-in edges crisp (pixel-clean), but
   faint DZI tile-grid lines can show on flat parchment at some zooms — tune

@@ -1,0 +1,46 @@
+{
+  "_about": "Single source of truth for the jubuddy-HK isometric grid — read by BOTH the asset bake (game-tiles) and the future jubuddy-HK renderer (Part 0 engine TBD). Reconciles the 'Claude Code x 2.5D Isometric' prompt pack with this repo's actual Phase-2 assets (game-tiles/README.md). Pack example numbers (128x64, crisp pixel) are superseded by reality below.",
+  "schemaVersion": 1,
+  "projection": "dimetric-2to1",
+  "style": "yok_iso_hk_soft_pictorial",
+
+  "tileWidth": 256,
+  "tileHeight": 128,
+  "elevationStep": 32,
+  "spriteCanvas": { "w": 256, "h": 160, "note": "actual slice size in game-tiles/iso/tiles.json; the 2:1 diamond is 256x128, the extra 32px is top overhang for raised content + spawn/goal markers" },
+
+  "rendering": {
+    "purity": "soft-stylised",
+    "note": "LOCKED: soft pictorial (yok_iso_hk_soft_pictorial), NOT crisp pixel-art. So the pack's pixelArt{quantizePalette,nearestNeighbor,integerScaleOnly} block does NOT apply.",
+    "quantizePalette": false,
+    "nearestNeighbor": false,
+    "integerScaleOnly": false
+  },
+
+  "tileKinds": ["empty", "path", "slot", "blocked", "spawn", "goal"],
+  "anchorConvention": "bottom-center",
+  "layers": ["ground", "object", "unit", "overlay"],
+
+  "_doc": {
+    "note": "JSON has no comments; these are the authoritative formulas every renderer MUST use (corrected from the pack's Part 3 — the earlier 'Z = Y x tileWidth' was wrong).",
+    "gridToScreen": "screenX = originX + (gx - gy) * (tileWidth / 2); screenY = originY + (gx + gy) * (tileHeight / 2) - z * elevationStep",
+    "drawOrder2D": "depthKey = gx + gy (larger = nearer the viewer = drawn later); tiebreak by z, then a stable id. A multi-cell tall prop sorts by max(gx+gy) of its footprint, or split into per-cell sub-sprites.",
+    "engine3D": "In a 3D / z-buffer engine (Three.js-orthographic, Unity, Godot) do NOT compute depthKey — place each sprite at the world position from (gx, gy, z) and let the depth buffer / Sorting Group / Y-sort resolve occlusion. Prefer this when tall HK towers next to low buildings break painter's-algorithm sort."
+  },
+
+  "consumers": {
+    "bake": "jubit-hk-tiles game-tiles/ (ground = scripts/make_ground_tiles.py deterministic; props = central_render_bake.py --transparent → hand-clean)",
+    "renderer": "jubuddy-HK (spin-off of jubuddy-game) — engine per Part 0 (Web/TS Pixi|Three-iso · Unity · Godot, undecided)"
+  },
+
+  "groundTiles": "game-tiles/iso/tiles.json",
+  "boards": "game-tiles/boards/districts.json",
+  "props": "game-tiles/props/ (per-prop transparent sprites; a props-manifest.json with per-prop {anchorX,anchorY,footprint,heightInLevels} is the documented next gap for the renderer)",
+
+  "references": [
+    "docs/HK-ADAPTATION-PLAN.md",
+    "game-tiles/README.md",
+    "jubuddy-game: docs/RESEARCH/2026-06-13-hk-metro-theme-feasibility.md (4-surface program map)",
+    "Claude Code x 2.5D Isometric — Tailored Prompt & Command Pack (Part 1B / Part 3)"
+  ]
+}

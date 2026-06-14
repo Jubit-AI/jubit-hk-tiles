@@ -155,6 +155,10 @@ export function createSoftStyliseComposer(renderer, scene, camera, width, height
   composer.setSize(width, height);
   composer.addPass(new RenderPass(scene, camera));
 
+  // (A three.js SAOPass crease-AO was trialled here but produced radial depth
+  // artifacts with the 3d-tiles-renderer's ortho/dynamic scene — reverted. AO
+  // stays a future deepening; the cel contour already separates forms.)
+
   const stylise = new ShaderPass(SoftStyliseShader);
   stylise.uniforms.uResolution.value.set(width, height);
   composer.addPass(stylise);

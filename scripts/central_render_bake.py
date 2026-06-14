@@ -157,6 +157,136 @@ def start_server() -> subprocess.Popen:
     )
 
 
+def render_tile(browser, tile, args, az, el, out_dir) -> bool:
+    """Render one tile in a fresh context. Returns True if it FAILED (whitebox/
+    init failure). Shared by the sequential and concurrent paths so the proven
+    per-tile logic lives in exactly one place."""
+    label, lat, lon, view_h = tile[:4]
+    extra = tile[4] if len(tile) > 4 else {}
+    params = {
+        "export": "true", "lat": lat, "lon": lon,
+        "width": WIDTH, "height": HEIGHT,
+        "azimuth": az, "elevation": el, "view_height": view_h,
+    }
+    params.update(extra)  # e.g. setViewOffset tile_col/row/cols/rows
+    if args.style == "soft":
+        params["style"] = "soft"
+        if args.pixel is not None:
+            params["pixel"] = args.pixel
+        if args.palette is not None:
+            params["palette"] = args.palette
+    if args.transparent:
+        params["transparent"] = "true"
+    q = urlencode(params)
+    ctx = browser.new_context(
+        viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
+    )
+    page = ctx.new_page()
+    # Per-tile texture-failure tracker (Rule: fail loud, never silently save a
+    # whitebox). With the transcoder hosted locally these are normally empty.
+    tex_errors: list[str] = []
+
+    def _on_console(m, _bucket=tex_errors):
+        if m.type in ("error", "warning"):
+            print(f"   [browser:{m.type}] {m.text[:160]}")
+        if "Couldn't load texture" in m.text or "KTX2" in m.text:
+            _bucket.append(m.text[:120])
+
+    page.on("console", _on_console)
+    page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
+    url = f"http://localhost:{PORT}/?{q}"
+    page.goto(url, wait_until="networkidle")
+    try:
+        page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
+        loaded = True
+    except Exception:
+        loaded = False
+        print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
+    # TILES_LOADED fires on geometry load; KTX2 textures transcode after, so
+    # settle before screenshot or we capture untextured (whitebox) buildings.
+    page.wait_for_timeout(args.settle_ms)
+    # Gate on the TRUE signal — the live textured-mesh inventory, NOT the noisy
+    # console (one transient "Couldn't load texture" is harmless when N/N meshes
+    # end up textured). A real whitebox = a large untextured fraction or init fail.
+    inv = page.evaluate("""() => {
+      const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
+      const root = window.__scene;
+      if (!root) { out.noScene = true; return out; }
+      root.traverse(o => {
+        if (!o.isMesh) return;
+        out.total++;
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        if (!mats.some(m => m && m.map)) out.noMap++;
+      });
+      return out;
+    }""")
+    out_path = out_dir / f"{label}.png"
+    page.screenshot(path=str(out_path), omit_background=args.transparent)
+    size = out_path.stat().st_size
+    total = inv.get("total", 0)
+    no_map = inv.get("noMap", 0)
+    untex_frac = (no_map / total) if total else 1.0
+    tex_note = f"{total - no_map}/{total} tex"
+    failed = False
+    if not loaded:
+        status, icon = "timeout", "⚠️ "
+    elif inv.get("initFailed") or untex_frac > 0.20:
+        status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
+        failed = True
+    else:
+        status, icon = f"ok {tex_note}", "✅"
+        if tex_errors:
+            status += f" ({len(tex_errors)} transient)"
+    print(f"   {icon} {label}.png "
+          f"({lat:.4f},{lon:.4f}) vh={view_h:.0f} {size//1024}KB [{status}]")
+    page.close()
+    ctx.close()
+    return failed
+
+
+def render_all(tiles, args, az, el, out_dir, launch_args) -> tuple[int, int]:
+    """Render every tile; returns (saved, failed). concurrency==1 is the proven
+    sequential path; >1 runs N worker threads, each with its OWN browser sharing
+    the one vite server (overlaps network/transcode/settle waits)."""
+    conc = max(1, args.concurrency)
+    if conc == 1:
+        saved = failed = 0
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True, args=launch_args)
+            for tile in tiles:
+                if render_tile(browser, tile, args, az, el, out_dir):
+                    failed += 1
+                saved += 1
+            browser.close()
+        return saved, failed
+
+    # Concurrent: round-robin tiles into `conc` chunks, one browser per worker
+    # thread (Playwright sync API is fine per-thread with its own instance).
+    from concurrent.futures import ThreadPoolExecutor
+    chunks = [tiles[i::conc] for i in range(conc)]
+
+    def worker(chunk):
+        if not chunk:
+            return 0, 0
+        s = f = 0
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True, args=launch_args)
+            for tile in chunk:
+                if render_tile(browser, tile, args, az, el, out_dir):
+                    f += 1
+                s += 1
+            browser.close()
+        return s, f
+
+    print(f"⚙️  rendering {len(tiles)} tiles with concurrency={conc}")
+    saved = failed = 0
+    with ThreadPoolExecutor(max_workers=conc) as ex:
+        for s, f in ex.map(worker, chunks):
+            saved += s
+            failed += f
+    return saved, failed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bake HK isometric tiles (grid or named locations)")
     parser.add_argument("--limit", type=int, default=None, help="render only the first N tiles")
@@ -172,6 +302,10 @@ def main() -> int:
     parser.add_argument("--settle-ms", type=int, default=3500,
                         help="ms to wait after TILES_LOADED for KTX2 textures to transcode "
                              "before screenshot (avoids untextured whitebox capture)")
+    parser.add_argument("--concurrency", type=int, default=1,
+                        help="parallel render workers (each its own browser, shared vite "
+                             "server). >1 overlaps the per-tile network/transcode/settle waits "
+                             "for territory-scale throughput. Default 1 = sequential.")
     parser.add_argument("--azimuth", type=float, default=AZ,
                         help=f"camera azimuth deg (default {AZ})")
     parser.add_argument("--elevation", type=float, default=EL,
@@ -233,97 +367,7 @@ def main() -> int:
     server = start_server()
     saved, failed = 0, 0
     try:
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True, args=launch_args)
-            for tile in tiles:
-                label, lat, lon, view_h = tile[:4]
-                extra = tile[4] if len(tile) > 4 else {}
-                params = {
-                    "export": "true", "lat": lat, "lon": lon,
-                    "width": WIDTH, "height": HEIGHT,
-                    "azimuth": az, "elevation": el, "view_height": view_h,
-                }
-                params.update(extra)  # e.g. setViewOffset tile_col/row/cols/rows
-                if args.style == "soft":
-                    params["style"] = "soft"
-                    if args.pixel is not None:
-                        params["pixel"] = args.pixel
-                    if args.palette is not None:
-                        params["palette"] = args.palette
-                if args.transparent:
-                    params["transparent"] = "true"
-                q = urlencode(params)
-                ctx = browser.new_context(
-                    viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
-                )
-                page = ctx.new_page()
-                # Per-tile texture-failure tracker. With the transcoder hosted
-                # locally these should be empty; if a "Couldn't load texture"
-                # slips through we surface it (Rule: fail loud) instead of
-                # silently saving a whitebox PNG.
-                tex_errors: list[str] = []
-
-                def _on_console(m, _bucket=tex_errors):
-                    if m.type in ("error", "warning"):
-                        print(f"   [browser:{m.type}] {m.text[:160]}")
-                    if "Couldn't load texture" in m.text or "KTX2" in m.text:
-                        _bucket.append(m.text[:120])
-
-                # Capture browser console + errors — catches CORS / WebGL failures
-                # (the blueprint's top risks) and texture-transcode failures.
-                page.on("console", _on_console)
-                page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
-                url = f"http://localhost:{PORT}/?{q}"
-                page.goto(url, wait_until="networkidle")
-                try:
-                    page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
-                    loaded = True
-                except Exception:
-                    loaded = False
-                    print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
-                # TILES_LOADED fires on geometry load, but KTX2/BasisU textures
-                # transcode asynchronously after that — screenshotting immediately
-                # catches untextured (whitebox) buildings. Settle so textures land.
-                page.wait_for_timeout(args.settle_ms)
-                # Gate on the TRUE signal — the actual textured-mesh inventory from
-                # the live scene — NOT the noisy console (a single transient
-                # "Couldn't load texture" from a tile culled mid-settle is harmless
-                # when 51/51 meshes end up textured). A real whitebox = a large
-                # untextured fraction or a transcoder-init failure.
-                inv = page.evaluate("""() => {
-                  const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
-                  const root = window.__scene;
-                  if (!root) { out.noScene = true; return out; }
-                  root.traverse(o => {
-                    if (!o.isMesh) return;
-                    out.total++;
-                    const mats = Array.isArray(o.material) ? o.material : [o.material];
-                    if (!mats.some(m => m && m.map)) out.noMap++;
-                  });
-                  return out;
-                }""")
-                out_path = out_dir / f"{label}.png"
-                page.screenshot(path=str(out_path), omit_background=args.transparent)
-                size = out_path.stat().st_size
-                total = inv.get("total", 0)
-                no_map = inv.get("noMap", 0)
-                untex_frac = (no_map / total) if total else 1.0
-                tex_note = f"{total - no_map}/{total} tex"
-                if not loaded:
-                    status, icon = "timeout", "⚠️ "
-                elif inv.get("initFailed") or untex_frac > 0.20:
-                    status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
-                    failed += 1
-                else:
-                    status, icon = f"ok {tex_note}", "✅"
-                    if tex_errors:
-                        status += f" ({len(tex_errors)} transient)"
-                print(f"   {icon} {label}.png "
-                      f"({lat:.4f},{lon:.4f}) vh={view_h:.0f} {size//1024}KB [{status}]")
-                saved += 1
-                page.close()
-                ctx.close()
-            browser.close()
+        saved, failed = render_all(tiles, args, az, el, out_dir, launch_args)
     finally:
         server.terminate()
         try:

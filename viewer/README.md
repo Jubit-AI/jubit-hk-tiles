@@ -69,9 +69,13 @@ vercel deploy --yes
   stitched **seamlessly** to 6144×4096, DZI'd in ~2s (521 tiles, 14 levels), and
   pans/zooms fine in OpenSeaDragon. `setViewOffset` holds across the larger grid.
   Sample: `docs/gallery/hk-island-strip-map.png`.
-- **Territory-scale bottleneck = render time** (~40s/tile locally, serial on one
-  dev server). Full territory = thousands of tiles → parallelise browser contexts
-  and/or batch by district. The DZI/stitch/viewer steps are cheap; only the bake
-  is time-bound. The live-API-vs-CSDI-bulk source decision also lands here.
+- **Territory-scale throughput — SOLVED via `--concurrency`.** ~40s/tile was
+  almost all overlappable waits (networkidle + KTX2 settle + b3dm fetch), so the
+  bake now renders N tiles in parallel (each worker its own browser, shared vite
+  server). Measured **~7.6× wall-clock** at `--concurrency 4` (4 tiles 160s→21s,
+  0 failures, output still perfectly seamless — concurrency can't affect a
+  setViewOffset window). Push higher for territory; only GPU/API rate-limits cap
+  it. Still pair with district batches + the live-API-vs-CSDI-bulk source choice
+  for the full territory pass.
 - **Attribution in `index.html` is REQUIRED by the HK Lands Dept open-data terms
   — do not remove.**

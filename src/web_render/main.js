@@ -43,6 +43,9 @@ const PIXEL_SIZE = urlParams.has("pixel") ? parseFloat(urlParams.get("pixel")) :
 const PALETTE_MIX = urlParams.has("palette") ? parseFloat(urlParams.get("palette")) : null;
 // night=true → day↔night re-light (ignite neon accents on the same geometry).
 const NIGHT = urlParams.get("night") === "true";
+// vector=true → clean STYLIZED-VECTOR-ILLUSTRATION preset: flatter cel fills,
+// hard palette flats, bold clean outline, no paper grain (graphic map look).
+const VECTOR = urlParams.get("vector") === "true";
 // transparent=true → no sky fill; the alpha channel is preserved end-to-end so a
 // tightly-framed landmark bakes as a game-ready PROP SPRITE (the jubuddy-HK
 // identity layer). Screenshot with omit_background to keep the transparency.
@@ -293,6 +296,13 @@ function init() {
     );
     // passes[1] is the SoftStyliseShader pass; apply optional URL overrides.
     const styliseUniforms = composer.passes[1].uniforms;
+    if (VECTOR) {
+      // stylized-vector-illustration preset (flat graphic map look)
+      styliseUniforms.uCelBands.value = 3.0;   // fewer tones → flatter regions
+      styliseUniforms.uGrain.value = 0.0;      // clean, no paper grain
+      styliseUniforms.uEdge.value = 1.7;       // bold clean vector outline
+      styliseUniforms.uPaletteMix.value = 1.0; // hard flat colour flats
+    }
     if (PIXEL_SIZE !== null) styliseUniforms.uPixelSize.value = PIXEL_SIZE;
     if (PALETTE_MIX !== null) styliseUniforms.uPaletteMix.value = PALETTE_MIX;
     if (NIGHT) styliseUniforms.uNight.value = 1.0;

@@ -177,6 +177,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
             params["palette"] = args.palette
         if args.night:
             params["night"] = "true"
+        if args.vector:
+            params["vector"] = "true"
     if args.transparent:
         params["transparent"] = "true"
     q = urlencode(params)
@@ -346,6 +348,9 @@ def main() -> int:
     parser.add_argument("--night", action="store_true",
                         help="soft only: day↔night re-light — deep-harbour dusk city with "
                              "ignited neon accents (same geometry, never a new composition)")
+    parser.add_argument("--vector", action="store_true",
+                        help="soft only: stylized-vector-illustration preset — flatter cel "
+                             "fills, hard palette flats, bold clean outline, no grain")
     parser.add_argument("--transparent", action="store_true",
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")

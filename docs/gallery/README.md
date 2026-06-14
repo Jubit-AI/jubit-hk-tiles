@@ -14,6 +14,7 @@ Lands Dept 3D open data — these PNGs are committed only as a visual reference.
 | `central.png` | CBD towers — dense verticality, ink contours, concrete massing |
 | `mong-kok.png` | Dense urban grid — the tuning test bed |
 | `mong-kok-night.png` | **Day↔night re-light** (`--night`) — same geometry dropped into a deep-harbour dusk, accents ignited |
+| `mong-kok-vector.png` | **Stylized-vector-illustration** preset (`--vector`) — flat graphic masses, bold outlines, no grain |
 | `sham-shui-po.png` | Tong-lau tenement density |
 | `victoria-harbour.png` | Harbour treatment — big rice-paper negative space, piers reaching in |
 | `prop-mongkok-block.png` | A **transparent prop sprite** (jubuddy-HK identity layer) — block isolated on alpha |

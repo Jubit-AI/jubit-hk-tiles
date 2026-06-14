@@ -64,7 +64,14 @@ vercel deploy --yes
 - `imageSmoothingEnabled:false` keeps zoomed-in edges crisp (pixel-clean), but
   faint DZI tile-grid lines can show on flat parchment at some zooms — tune
   `overlap` in `make_dzi.py` or flip smoothing if it bothers a given surface.
-- Territory scale: bake larger `cols×rows` (or batched districts) → stitch →
-  DZI. LOD tuning + the live-API-vs-CSDI-bulk source decision come at that scale.
+- **Scale test (validated):** a 6×4 = 24-tile viewmap (Central → Wan Chai →
+  Causeway Bay → North Point + Kowloon across the harbour) baked **0 failures**,
+  stitched **seamlessly** to 6144×4096, DZI'd in ~2s (521 tiles, 14 levels), and
+  pans/zooms fine in OpenSeaDragon. `setViewOffset` holds across the larger grid.
+  Sample: `docs/gallery/hk-island-strip-map.png`.
+- **Territory-scale bottleneck = render time** (~40s/tile locally, serial on one
+  dev server). Full territory = thousands of tiles → parallelise browser contexts
+  and/or batch by district. The DZI/stitch/viewer steps are cheap; only the bake
+  is time-bound. The live-API-vs-CSDI-bulk source decision also lands here.
 - **Attribution in `index.html` is REQUIRED by the HK Lands Dept open-data terms
   — do not remove.**

@@ -53,12 +53,15 @@
   // ── Board (Output G — curated HK district boards, loaded from JSON) ─────────
   const BOARDS_SRC = "/game-tiles/boards/districts.json";
   let BOARDS = [], BOARD = null;            // all defs + the active one
-  let COLS = 8, ROWS = 8, PATH = [], SLOTS = [], BLOCKED = [], SPAWN, GOAL;
+  let COLS = 8, ROWS = 8, SLOTS = [], BLOCKED = [], GOAL;
+  // Multi-path (Output D station): PATHS = one or more spawn→goal routes.
+  let PATHS = [], SPAWNS = [];
 
+  const inAnyPath = (c,r) => PATHS.some(pth => pth.some(p => p[0]===c && p[1]===r));
   function kindAt(c,r){
-    if (c===SPAWN[0]&&r===SPAWN[1]) return "spawn";
-    if (c===GOAL[0]&&r===GOAL[1]) return "goal";
-    if (PATH.some(p=>p[0]===c&&p[1]===r)) return "path";
+    if (SPAWNS.some(s=>s[0]===c&&s[1]===r)) return "spawn";
+    if (GOAL && c===GOAL[0]&&r===GOAL[1]) return "goal";
+    if (inAnyPath(c,r)) return "path";
     if (SLOTS.some(p=>p[0]===c&&p[1]===r)) return "slot";
     if (BLOCKED.some(p=>p[0]===c&&p[1]===r)) return "blocked";
     return "empty";
@@ -67,15 +70,17 @@
   function loadBoard(def){
     BOARD = def;
     COLS = def.cols; ROWS = def.rows;
-    PATH = def.path; SLOTS = def.slots || []; BLOCKED = def.blocked || [];
-    SPAWN = PATH[0]; GOAL = PATH[PATH.length-1];
-    sizeCanvas(); PP = pathPoints();
+    SLOTS = def.slots || []; BLOCKED = def.blocked || [];
+    PATHS = def.paths ? def.paths : [def.path];   // single-path boards → one path
+    SPAWNS = PATHS.map(p => p[0]);
+    GOAL = PATHS[0][PATHS[0].length-1];           // all routes share the goal
+    sizeCanvas(); PPs = PATHS.map(pathPoints);
     // reset the run for the new district
     towers.length = 0; enemies.length = 0; shots.length = 0;
     hp = 20; coins = 120; wave = 1; spawned = 0; spawnTimer = 40;
     // seed two towers on the first two slots so the loop reads as alive
     SLOTS.slice(0,2).forEach(([c,r])=>towers.push({c,r,cool:0}));
-    // Output E: a ding-ding tram glides this board's track
+    // Output E: a ding-ding tram glides this board's (first) track
     tram = def.tram ? { t: 0 } : null;
   }
 
@@ -98,22 +103,28 @@
   const shots = [];           // {x,y,tx,ty,life}
   let hp = 20, coins = 120, wave = 1, spawnTimer = 0, spawned = 0, frame = 0;
 
-  function pathPoints(){ return PATH.map(([c,r])=>cellCenter(c,r)); }
-  let PP = [];
+  const pathPoints = (pth)=> pth.map(([c,r])=>cellCenter(c,r));
+  let PPs = [];                              // screen points per path
+  const PP = () => PPs[0] || [];             // the tram rides the first track
 
-  function spawnEnemy(){ enemies.push({ t: 0, hp: 6, maxhp: 6, dead:false, x:0, y:0 }); }
+  function spawnEnemy(){
+    // round-robin entrances so all station corridors stay busy
+    const path = spawned % PPs.length;
+    enemies.push({ t: 0, path, hp: 6, maxhp: 6, dead:false, x:0, y:0 });
+  }
 
   function enemyPos(e){
-    // interpolate along PP by t in [0, PP.length-1]
-    const seg = Math.min(Math.floor(e.t), PP.length-2);
+    const pp = PPs[e.path] || PPs[0];
+    const seg = Math.min(Math.floor(e.t), pp.length-2);
     const f = e.t - seg;
-    const a = PP[seg], b = PP[seg+1];
+    const a = pp[seg], b = pp[seg+1];
     return { x: a.x+(b.x-a.x)*f, y: a.y+(b.y-a.y)*f - 14*S }; // lift off the tile
   }
   function tramPos(){
-    const seg = Math.min(Math.floor(tram.t), PP.length-2);
+    const pp = PP();
+    const seg = Math.min(Math.floor(tram.t), pp.length-2);
     const f = tram.t - seg;
-    const a = PP[seg], b = PP[seg+1];
+    const a = pp[seg], b = pp[seg+1];
     return { x: a.x+(b.x-a.x)*f, y: a.y+(b.y-a.y)*f };  // sits on the track
   }
 
@@ -149,7 +160,7 @@
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) drawTile(c,r);
     // HK identity prop on a decorative corner cell (props-on-clean-ground).
     // Skip on the tram board — the ding-ding is its hero element instead.
-    if(prop && !tram){ const ctr=cellCenter(0, Math.min(6, ROWS-1));
+    if(prop && !tram && !(BOARD&&BOARD.station)){ const ctr=cellCenter(0, Math.min(6, ROWS-1));
       const pw=IMG_W*S*0.9, ph=prop.height*(pw/prop.width);
       ctx.drawImage(prop, ctr.x-pw/2, ctr.y-ph+DIA_CY*S*0.7, pw, ph); }
     // depth-sort dynamic actors by screen y (tram included so it occludes right)
@@ -168,14 +179,14 @@
   function update(){
     frame++;
     // Output E: glide the ding-ding along its track, then loop back to the start
-    if(tram){ tram.t += 0.02; if(tram.t >= PP.length-1) tram.t = 0; }
+    if(tram){ tram.t += 0.02; if(tram.t >= PP().length-1) tram.t = 0; }
     // spawn waves
     spawnTimer--;
     if(spawnTimer<=0 && spawned<8){ spawnEnemy(); spawned++; spawnTimer=70; }
     // move enemies
     for(const e of enemies){ if(e.dead) continue;
       e.t += 0.012; const p=enemyPos(e); e.x=p.x; e.y=p.y;
-      if(e.t>=PP.length-1){ e.dead=true; hp=Math.max(0,hp-1); }
+      if(e.t>=(PPs[e.path]||PPs[0]).length-1){ e.dead=true; hp=Math.max(0,hp-1); }
     }
     // towers fire
     for(const t of towers){ t.cool=(t.cool||0)-1;

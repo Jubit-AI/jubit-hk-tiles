@@ -1,0 +1,20 @@
+{
+  "source": "Output F — IP-safe HK landmark 'location' card subtype (the first 12)",
+  "cardType": "location",
+  "legalBasis": "HK Copyright Ordinance §71 — depicting a building in a public place does not infringe; building shapes/massing are free, only logos/signage/names are protected. All 12 are tier-green (natural features, heritage, temples, public infrastructure). Signage is abstracted; no real logos/text.",
+  "ipTierLegend": { "green": "safe (heritage/nature/public)", "caution": "silhouette only, no logos", "avoid": "do not render legibly" },
+  "landmarks": [
+    { "id": "victoria-harbour", "name": "Victoria Harbour", "district": "across the harbour", "ipTier": "green", "lat": 22.293, "lon": 114.168, "viewHeight": 650, "needsInfra": false, "art": "art/victoria-harbour.png", "blurb": "The harbour plane + piers — the city's open heart." },
+    { "id": "kowloon-walled-city-park", "name": "Kowloon Walled City Park", "district": "Kowloon City", "ipTier": "green", "lat": 22.332, "lon": 114.190, "viewHeight": 320, "needsInfra": false, "art": "art/kowloon-walled-city-park.png", "blurb": "Heritage garden on the old walled-city ground." },
+    { "id": "kai-tak", "name": "Kai Tak", "district": "Kowloon Bay", "ipTier": "green", "lat": 22.329, "lon": 114.199, "viewHeight": 450, "needsInfra": false, "art": "art/kai-tak.png", "blurb": "The old runway, reborn as a new district." },
+    { "id": "tst-clock-tower", "name": "TST Clock Tower", "district": "Tsim Sha Tsui", "ipTier": "green", "lat": 22.2944, "lon": 114.1722, "viewHeight": 260, "needsInfra": false, "art": "art/tst-clock-tower.png", "blurb": "The 1915 railway clock tower on the waterfront." },
+    { "id": "man-mo-temple", "name": "Man Mo Temple", "district": "Sheung Wan", "ipTier": "green", "lat": 22.2839, "lon": 114.1503, "viewHeight": 240, "needsInfra": false, "art": "art/man-mo-temple.png", "blurb": "Incense-coiled temple to the civil & martial gods." },
+    { "id": "temple-street", "name": "Temple Street", "district": "Yau Ma Tei", "ipTier": "green", "lat": 22.3110, "lon": 114.1700, "viewHeight": 300, "needsInfra": false, "art": "art/temple-street.png", "blurb": "The night-market spine of Kowloon." },
+    { "id": "golden-bauhinia-square", "name": "Golden Bauhinia Square", "district": "Wan Chai", "ipTier": "green", "lat": 22.2820, "lon": 114.1739, "viewHeight": 300, "needsInfra": false, "art": "art/golden-bauhinia-square.png", "blurb": "Waterfront plaza by the convention centre." },
+    { "id": "tsing-ma-bridge", "name": "Tsing Ma Bridge", "district": "Ma Wan channel", "ipTier": "green", "lat": 22.351, "lon": 114.074, "needsInfra": true, "art": null, "blurb": "Suspension bridge — needs the infrastructure layer." },
+    { "id": "tian-tan-buddha", "name": "Tian Tan Buddha", "district": "Lantau", "ipTier": "green", "lat": 22.254, "lon": 113.905, "needsInfra": true, "art": null, "blurb": "The Big Buddha — needs the infrastructure layer." },
+    { "id": "tai-o", "name": "Tai O Stilt Houses", "district": "Lantau", "ipTier": "green", "lat": 22.252, "lon": 113.863, "needsInfra": true, "art": null, "blurb": "Fishing-village stilt houses — needs marine/infra layer." },
+    { "id": "stonecutters-bridge", "name": "Stonecutters Bridge", "district": "Rambler Channel", "ipTier": "green", "lat": 22.336, "lon": 114.122, "needsInfra": true, "art": null, "blurb": "Cable-stayed bridge — needs the infrastructure layer." },
+    { "id": "peak-tram", "name": "Peak Tram (abstracted)", "district": "The Peak", "ipTier": "green", "lat": 22.271, "lon": 114.156, "needsInfra": true, "art": null, "blurb": "Funicular up the Peak — needs the infrastructure layer." }
+  ]
+}

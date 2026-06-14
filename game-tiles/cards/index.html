@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jubuddy-HK — location cards (Output F)</title>
+  <style>
+    :root{ --paper:#F6F1E8; --off:#EFE7D8; --ink:#1f1a17; --conc:#A89F90;
+      --gold:#C7A25B; --teal:#14B8A6; --cinnabar:#B64734; --jade:#7C9C8E; }
+    html,body{margin:0;background:var(--paper);color:var(--ink);
+      font:14px/1.5 -apple-system,system-ui,sans-serif;}
+    header{padding:18px 24px 4px;}
+    h1{font-size:18px;margin:0 0 2px;letter-spacing:.2px;}
+    .sub{color:#5a5145;font-size:12px;max-width:80ch;}
+    #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:16px;padding:18px 24px 28px;}
+    .card{background:var(--off);border:1px solid var(--conc);border-radius:14px;
+      overflow:hidden;box-shadow:0 1px 0 #d8cfbf;display:flex;flex-direction:column;}
+    .art{aspect-ratio:1/1;background:#e9e2d4 center/cover no-repeat;position:relative;}
+    .art.placeholder{display:flex;align-items:center;justify-content:center;color:#9a8f7e;
+      font-size:12px;text-align:center;padding:0 18px;background:
+      repeating-linear-gradient(135deg,#ece5d6 0 10px,#e6dfce 10px 20px);}
+    .badge{position:absolute;top:8px;left:8px;background:rgba(31,26,23,.85);color:var(--paper);
+      font-size:10px;letter-spacing:.6px;padding:3px 7px;border-radius:6px;text-transform:uppercase;}
+    .tier{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:50%;
+      border:1.5px solid var(--ink);}
+    .tier.green{background:var(--jade);} .tier.caution{background:var(--gold);} .tier.avoid{background:var(--cinnabar);}
+    .body{padding:10px 12px 12px;}
+    .name{font-weight:600;font-size:15px;}
+    .dist{color:var(--gold);font-size:11px;letter-spacing:.3px;margin-bottom:6px;}
+    .blurb{color:#5a5145;font-size:12px;}
+    footer{padding:10px 24px 24px;color:#5a5145;font-size:11px;max-width:80ch;}
+    footer b{color:var(--ink);}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>jubuddy-HK · Location cards <span style="color:#9a8f7e;font-weight:400">— Output F</span></h1>
+    <div class="sub">The IP-safe "first 12" as a new <b>location</b> card subtype (distinct from creature cards).
+      Art is building-massing only (HK Copyright Ordinance §71); signage abstracted, no real logos.</div>
+  </header>
+  <div id="grid"></div>
+  <footer>
+    Building data © <b>The Government of the Hong Kong SAR (Lands Department)</b>, via <b>DATA.GOV.HK</b>.
+    Rendered &amp; stylised by Jubit (<b>Yok-Iso HK</b>). Cards are derived works; not for resale as a standalone dataset.
+  </footer>
+  <script>
+  fetch("landmarks.json").then(r=>r.json()).then(data=>{
+    const grid=document.getElementById("grid");
+    for(const l of data.landmarks){
+      const card=document.createElement("div"); card.className="card";
+      const art=document.createElement("div");
+      if(l.art && !l.needsInfra){ art.className="art"; art.style.backgroundImage=`url(${l.art})`; }
+      else { art.className="art placeholder"; art.textContent="needs infrastructure layer"; }
+      art.innerHTML += `<span class="badge">Location</span><span class="tier ${l.ipTier}" title="IP tier: ${l.ipTier}"></span>`;
+      const body=document.createElement("div"); body.className="body";
+      body.innerHTML=`<div class="name">${l.name}</div><div class="dist">${l.district}</div><div class="blurb">${l.blurb}</div>`;
+      card.appendChild(art); card.appendChild(body); grid.appendChild(card);
+    }
+  });
+  </script>
+</body>
+</html>

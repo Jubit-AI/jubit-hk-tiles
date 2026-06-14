@@ -38,7 +38,7 @@
   <script>
     // DZI source: ?dzi=<path> (default the bundled Central sample).
     const params = new URLSearchParams(location.search);
-    const dzi = params.get("dzi") || "central.dzi";
+    const dzi = params.get("dzi") || "territory.dzi";  // flagship urban-core map
     OpenSeadragon({
       id: "osd",
       prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",

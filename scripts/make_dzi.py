@@ -32,8 +32,16 @@ DZI_XML = (
 
 def make_dzi(src: Path, out_base: Path, tile_size: int = 256,
              overlap: int = 1, fmt: str = "png") -> None:
+    # Validate params — tile_size is a divisor (ZeroDivisionError if 0) and a
+    # negative overlap would invert the crop math.
+    if tile_size < 1:
+        raise ValueError(f"tile_size must be >= 1 (got {tile_size})")
+    if overlap < 0:
+        raise ValueError(f"overlap must be >= 0 (got {overlap})")
     img = Image.open(src).convert("RGBA")
     w, h = img.size
+    if w < 1 or h < 1:
+        raise ValueError(f"source image has invalid size {w}×{h}")
     out_base.parent.mkdir(parents=True, exist_ok=True)
     files_dir = out_base.parent / (out_base.name + "_files")
 

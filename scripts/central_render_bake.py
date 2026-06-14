@@ -178,69 +178,87 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
     if args.transparent:
         params["transparent"] = "true"
     q = urlencode(params)
-    ctx = browser.new_context(
-        viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
-    )
-    page = ctx.new_page()
     # Per-tile texture-failure tracker (Rule: fail loud, never silently save a
     # whitebox). With the transcoder hosted locally these are normally empty.
     tex_errors: list[str] = []
-
-    def _on_console(m, _bucket=tex_errors):
-        if m.type in ("error", "warning"):
-            print(f"   [browser:{m.type}] {m.text[:160]}")
-        if "Couldn't load texture" in m.text or "KTX2" in m.text:
-            _bucket.append(m.text[:120])
-
-    page.on("console", _on_console)
-    page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
-    url = f"http://localhost:{PORT}/?{q}"
-    page.goto(url, wait_until="networkidle")
-    try:
-        page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
-        loaded = True
-    except Exception:
-        loaded = False
-        print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
-    # TILES_LOADED fires on geometry load; KTX2 textures transcode after, so
-    # settle before screenshot or we capture untextured (whitebox) buildings.
-    page.wait_for_timeout(args.settle_ms)
-    # Gate on the TRUE signal — the live textured-mesh inventory, NOT the noisy
-    # console (one transient "Couldn't load texture" is harmless when N/N meshes
-    # end up textured). A real whitebox = a large untextured fraction or init fail.
-    inv = page.evaluate("""() => {
-      const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
-      const root = window.__scene;
-      if (!root) { out.noScene = true; return out; }
-      root.traverse(o => {
-        if (!o.isMesh) return;
-        out.total++;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        if (!mats.some(m => m && m.map)) out.noMap++;
-      });
-      return out;
-    }""")
-    out_path = out_dir / f"{label}.png"
-    page.screenshot(path=str(out_path), omit_background=args.transparent)
-    size = out_path.stat().st_size
-    total = inv.get("total", 0)
-    no_map = inv.get("noMap", 0)
-    untex_frac = (no_map / total) if total else 1.0
-    tex_note = f"{total - no_map}/{total} tex"
+    # EVERYTHING below is wrapped so a browser crash / FD exhaustion / nav error
+    # is CONTAINED as a failed tile (returns True) and the context/page are ALWAYS
+    # closed — otherwise, in concurrent mode, one bad tile would crash the worker
+    # thread (losing its remaining chunk) and leak the page/context.
+    ctx = page = None
     failed = False
-    if not loaded:
-        status, icon = "timeout", "⚠️ "
-    elif inv.get("initFailed") or untex_frac > 0.20:
-        status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
+    try:
+        ctx = browser.new_context(
+            viewport={"width": WIDTH, "height": HEIGHT}, device_scale_factor=1,
+        )
+        page = ctx.new_page()
+
+        def _on_console(m, _bucket=tex_errors):
+            if m.type in ("error", "warning"):
+                print(f"   [browser:{m.type}] {m.text[:160]}")
+            if "Couldn't load texture" in m.text or "KTX2" in m.text:
+                _bucket.append(m.text[:120])
+
+        page.on("console", _on_console)
+        page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
+        url = f"http://localhost:{PORT}/?{q}"
+        page.goto(url, wait_until="networkidle")
+        try:
+            page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
+            loaded = True
+        except Exception:
+            loaded = False
+            print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
+        # TILES_LOADED fires on geometry load; KTX2 textures transcode after, so
+        # settle before screenshot or we capture untextured (whitebox) buildings.
+        page.wait_for_timeout(args.settle_ms)
+        # Gate on the TRUE signal — the live textured-mesh inventory, NOT the noisy
+        # console (one transient "Couldn't load texture" is harmless when N/N meshes
+        # end up textured). A real whitebox = a large untextured fraction or init fail.
+        inv = page.evaluate("""() => {
+          const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
+          const root = window.__scene;
+          if (!root) { out.noScene = true; return out; }
+          root.traverse(o => {
+            if (!o.isMesh) return;
+            out.total++;
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            if (!mats.some(m => m && m.map)) out.noMap++;
+          });
+          return out;
+        }""")
+        out_path = out_dir / f"{label}.png"
+        page.screenshot(path=str(out_path), omit_background=args.transparent)
+        size = out_path.stat().st_size
+        total = inv.get("total", 0)
+        no_map = inv.get("noMap", 0)
+        untex_frac = (no_map / total) if total else 1.0
+        tex_note = f"{total - no_map}/{total} tex"
+        if not loaded:
+            status, icon = "timeout", "⚠️ "
+        elif inv.get("initFailed") or untex_frac > 0.20:
+            status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
+            failed = True
+        else:
+            status, icon = f"ok {tex_note}", "✅"
+            if tex_errors:
+                status += f" ({len(tex_errors)} transient)"
+        print(f"   {icon} {label}.png "
+              f"({lat:.4f},{lon:.4f}) vh={view_h:.0f} {size//1024}KB [{status}]")
+    except Exception as e:
         failed = True
-    else:
-        status, icon = f"ok {tex_note}", "✅"
-        if tex_errors:
-            status += f" ({len(tex_errors)} transient)"
-    print(f"   {icon} {label}.png "
-          f"({lat:.4f},{lon:.4f}) vh={view_h:.0f} {size//1024}KB [{status}]")
-    page.close()
-    ctx.close()
+        print(f"   ❌ {label}.png — render error (contained): {str(e)[:160]}")
+    finally:
+        if page is not None:
+            try:
+                page.close()
+            except Exception:
+                pass
+        if ctx is not None:
+            try:
+                ctx.close()
+            except Exception:
+                pass
     return failed
 
 
@@ -309,8 +327,9 @@ def main() -> int:
     parser.add_argument("--azimuth", type=float, default=AZ,
                         help=f"camera azimuth deg (default {AZ})")
     parser.add_argument("--elevation", type=float, default=EL,
-                        help=f"camera elevation deg; true-iso={EL}, SC2000 dimetric=-26.565 "
-                             "(flatter = more tower-face, better for HK verticality)")
+                        help=f"camera elevation deg; default {EL} = SC2000 dimetric 2:1 "
+                             "(arctan 0.5, better for HK verticality). true-iso ≈ -35.264 "
+                             "(comparison reference; flatter default shows more tower-face)")
     parser.add_argument("--style", choices=["raw", "soft"], default="soft",
                         help="soft (default) = deterministic soft-stylise post-process, the "
                              "shippable look, no AI; raw = unstyled render (the input the "

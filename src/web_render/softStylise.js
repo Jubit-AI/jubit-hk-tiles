@@ -95,7 +95,7 @@ const SoftStyliseShader = {
       float lum = luma(col);
 
       // 1. Cel posterize, lifted into the warm-concrete range (no black crush).
-      // Floor 0.33 keeps shadow faces as deep concrete (not black) while giving
+      // Floor 0.30 keeps shadow faces as deep concrete (not black) while giving
       // the massing more tonal punch than a 0.40 floor (which washed pale).
       float bands = uCelBands;
       float banded = floor(lum * bands + 0.5) / bands;

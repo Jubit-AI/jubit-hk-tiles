@@ -26,17 +26,18 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-# ── Yok-Iso palette (aesthetic-spec §1, exact hexes) ─────────────────────────
-PARCHMENT = (246, 241, 232)   # F6F1E8 rice-paper
-OFFWHITE  = (239, 231, 216)   # EFE7D8
-CONC_LT   = (201, 194, 182)   # C9C2B6
-CONC_MD   = (168, 159, 144)   # A89F90
-CONC_SH   = (138, 131, 120)   # 8A8378
-INK       = (31, 26, 23)      # 1F1A17 soft-graffiti contour
+# ── Palette anchor (aesthetic-spec §1, LOCKED 2026-06-14) ────────────────────
+PARCHMENT = (243, 231, 207)   # F3E7CF rice paper (lightest)
+OFFWHITE  = (243, 231, 207)   # alias → rice paper
+CONC_LT   = (217, 197, 156)   # D9C59C parchment (mid base)
+CONC_MD   = (163, 143, 97)    # ~A38F61 derived warm concrete mid
+CONC_SH   = (94, 82, 56)      # ~5E5238 derived warm concrete shadow
+INK       = (26, 26, 23)      # 1A1A17 contour
 GOLD      = (199, 162, 91)    # C7A25B antique gold (slot ring)
-TEAL      = (20, 184, 166)    # 14B8A6 (goal)
+TEAL      = (31, 111, 115)    # 1F6F73 harbour teal (goal)
+DEEP_HARB = (13, 61, 70)      # 0D3D46 deep harbour
 CINNABAR  = (182, 71, 52)     # B64734 (spawn)
-JADE      = (124, 156, 142)   # 7C9C8E
+JADE      = (46, 140, 125)    # 2E8C7D tram jade (goal gate)
 
 TILE_W, TILE_H = 256, 160          # canvas; diamond is 256 wide × 128 tall
 DIAMOND_H = 128

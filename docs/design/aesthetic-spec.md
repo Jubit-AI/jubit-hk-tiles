@@ -21,24 +21,26 @@ This welds the city tiles to the Codex character line: both paint from the same 
 
 **LOCKED 2026-06-13.** The token is a one-line contract the LoRA + every generation prompt must agree on — changing it means retraining. `inference/train.py` is the fine-tune entrypoint (was missing); it trains the 40-pair set (§5) to respond to this token and saves to the volume `server.py` reads.
 
-## 1. Palette — 70 parchment / 20 ink / 6 teal-neon / 3 cinnabar / 1 gold
+## 1. Palette — 70 parchment / 20 ink / 6 harbour-teal / 3 cinnabar / 1 gold
 
-**Locked HK visual formula (2026-06-14):** **70% warm parchment + 20% ink structure + 6% HK teal/neon + 3% cinnabar + 1% antique gold.** Neon is an accent, never the whole mood. (Pink stays a Jubit brand colour but is **reserved for the characters/creatures**, not fielded on city tiles — it helps the character win the saturation hierarchy. Jade is a material colour for harbour water / Star Ferry, not a budget accent.)
+**PALETTE ANCHOR (LOCKED 2026-06-14) — the canonical 8.** Every surface (shader snap, ground tiles, cards, tram, UI backgrounds) keys off these:
 
-**Parchment / base (70%)** — warm sun-bleached HK (no SC2K brown ground):
 | Role | Hex |
 |---|---|
-| Rice-paper substrate (whole tile) | `#F6F1E8` |
-| Warm off-white highlight | `#EFE7D8` |
-| Concrete light / mid / shadow | `#C9C2B6` / `#A89F90` / `#8A8378` |
+| Rice paper (substrate / lightest face) | `#F3E7CF` |
+| Parchment (mid base / second tone) | `#D9C59C` |
+| Ink (contour + deepest creases) | `#1A1A17` |
+| Deep harbour (water shadow / night water) | `#0D3D46` |
+| Harbour teal (water + the restrained brand accent) | `#1F6F73` |
+| Tram jade (Star Ferry / goal / jade accents) | `#2E8C7D` |
+| Cinnabar (tram/ding-ding, lantern, one sign) | `#B64734` |
+| Antique gold (divider/trim/highlight — never chrome) | `#C7A25B` |
 
-**Ink structure (20%)** — `#1F1A17` (the single soft-graffiti contour + deepest creases + the built-form line that reads the silhouette). The structural backbone, not just outlines.
+*Functional concrete ramp (derived, not anchor): warm mids `~#A38F61` / `~#5E5238` between parchment and ink, so the city massing has a smooth ramp.* The shader (`softStylise.js`) snaps to these; the 4 saturated accents (deep-harbour / harbour-teal / tram-jade / cinnabar) are chroma-gated so grey concrete never mis-snaps to them.
 
-**HK teal / neon (6%)** — the brand-accent fingerprint, placed not fielded: teal `#14B8A6`; at night the HK neon reserve ignites (see below). Harbour-cyan, lantern, sign glow — restrained.
+**Locked HK visual formula:** **70% warm parchment + 20% ink structure + 6% harbour-teal + 3% cinnabar + 1% antique gold.** Teal is an accent, never the whole mood (harbour mist, lantern glow — not cyberpunk). Pink is **reserved for the characters/creatures**, never fielded on city tiles. (Earlier cooler palette — rice `#F6F1E8`, concrete `#C9C2B6/#A89F90/#8A8378`, brand teal `#14B8A6`, jade `#7C9C8E` — superseded by the warmer, harbour-forward anchor above.)
 
-**Cinnabar (3%)** — `#B64734` (tram/ding-ding, lantern, one sign). *(Locked to Codex's authored Yok token — `yok.ts traditional.palette[2]` + `apps/web cinnabar_jade_gold.swatches[2]` + brand CSS `--cinnabar`. The earlier `#E63946` was Basquiat's "arterial red", not Yok cinnabar.)*
-
-**Antique gold (1%)** — matte `#C7A25B` (divider/trim/highlight only — never chrome/gloss). Plus the **structure materials** it lives among: Piltover cream `#F0E2C9`, copper `#C8A36A`.
+**Note:** building-only renders rarely trigger the harbour/teal/jade accents (raw water renders sky-pale → snaps to rice paper); those colours live in the **game tiles** (goal/spawn markers, water), the **tram**, and a future water-treatment pass.
 
 **Material/support colours (not budget accents):** jade `#7C9C8E` (Star Ferry/piers), water-jade `#A8B8A3` (harbour).
 

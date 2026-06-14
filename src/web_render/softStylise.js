@@ -51,36 +51,34 @@ const SoftStyliseShader = {
     float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float chroma(vec3 c) { return max(max(c.r,c.g),c.b) - min(min(c.r,c.g),c.b); }
 
-    // The 15-colour Yok palette (aesthetic-spec §1). Indices 12-14 are the
-    // high-chroma accents (teal/pink/cinnabar) — chroma-gated below so the
-    // concrete city never mis-snaps to them.
+    // The locked palette ANCHOR (aesthetic-spec §1). 0-1,4 + the two derived
+    // warm-concrete mids (2-3) are the neutral massing ramp; 5 gold is structure;
+    // 6-9 are the saturated harbour/cinnabar accents, chroma-gated below so the
+    // grey concrete city never mis-snaps to them. (Indices 2-3 are derived warm
+    // mids between parchment and ink — not anchor colours — for smooth massing.)
     vec3 yok(int i) {
-      if (i==0)  return vec3(0.965,0.945,0.910); // rice-paper  F6F1E8
-      if (i==1)  return vec3(0.937,0.906,0.847); // off-white   EFE7D8
-      if (i==2)  return vec3(0.788,0.761,0.714); // concrete lt C9C2B6
-      if (i==3)  return vec3(0.659,0.624,0.565); // concrete md A89F90
-      if (i==4)  return vec3(0.541,0.514,0.471); // concrete sh 8A8378
-      if (i==5)  return vec3(0.122,0.102,0.090); // ink         1F1A17
-      if (i==6)  return vec3(0.941,0.886,0.788); // cream       F0E2C9
-      if (i==7)  return vec3(0.784,0.639,0.416); // copper      C8A36A
-      if (i==8)  return vec3(0.780,0.635,0.357); // antique gold C7A25B
-      if (i==9)  return vec3(0.890,0.839,0.745); // sky         E3D6BE
-      if (i==10) return vec3(0.659,0.722,0.639); // water jade  A8B8A3
-      if (i==11) return vec3(0.486,0.612,0.557); // jade        7C9C8E
-      if (i==12) return vec3(0.078,0.722,0.651); // JUBIT TEAL  14B8A6 (accent)
-      if (i==13) return vec3(0.925,0.282,0.600); // JUBIT PINK  EC4899 (accent)
-      return            vec3(0.714,0.278,0.204); // cinnabar    B64734 (accent)
+      if (i==0)  return vec3(0.953,0.906,0.812); // rice paper    F3E7CF
+      if (i==1)  return vec3(0.851,0.773,0.612); // parchment     D9C59C
+      if (i==2)  return vec3(0.639,0.561,0.380); // concrete mid  ~A38F61 (derived)
+      if (i==3)  return vec3(0.369,0.322,0.220); // concrete shdw ~5E5238 (derived)
+      if (i==4)  return vec3(0.102,0.102,0.090); // ink           1A1A17
+      if (i==5)  return vec3(0.780,0.635,0.357); // antique gold  C7A25B
+      if (i==6)  return vec3(0.051,0.239,0.275); // deep harbour  0D3D46 (accent)
+      if (i==7)  return vec3(0.122,0.435,0.451); // harbour teal  1F6F73 (accent)
+      if (i==8)  return vec3(0.180,0.549,0.490); // tram jade     2E8C7D (accent)
+      return            vec3(0.714,0.278,0.204); // cinnabar      B64734 (accent)
     }
 
-    // Snap to nearest Yok colour. Accents (12-14) get a penalty scaled by how
-    // GREY the source is, so only genuinely-colourful pixels reach teal/pink.
+    // Snap to nearest anchor colour. Accents (6-9: harbour/jade/cinnabar) get a
+    // penalty scaled by how GREY the source is, so only genuinely-colourful
+    // pixels reach them — the concrete city stays on the neutral ramp + gold.
     vec3 snapYok(vec3 c) {
       float srcCh = chroma(c);
       float best = 1e9; vec3 bestc = c;
-      for (int i = 0; i < 15; i++) {
+      for (int i = 0; i < 10; i++) {
         vec3 p = yok(i);
         float d = distance(c, p);
-        if (i >= 12) d += (1.0 - srcCh) * 0.6; // chroma-gate the brand accents
+        if (i >= 6) d += (1.0 - srcCh) * 0.6; // chroma-gate the saturated accents
         if (d < best) { best = d; bestc = p; }
       }
       return bestc;

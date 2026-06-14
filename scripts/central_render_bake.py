@@ -389,7 +389,10 @@ def main() -> int:
         tiles = tiles[: args.limit]
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    launch_args = ["--enable-webgl", "--use-gl=angle", "--ignore-gpu-blocklist"]
+    # --disk-cache-size caps Chromium's HTTP cache so fetched b3dm tiles don't
+    # accumulate to GBs across a large bake (the ENOSPC cause at territory scale).
+    launch_args = ["--enable-webgl", "--use-gl=angle", "--ignore-gpu-blocklist",
+                   "--disk-cache-size=1", "--media-cache-size=1"]
     if args.disable_web_security:
         launch_args += ["--disable-web-security", f"--user-data-dir=/tmp/hk-bake-{PORT}"]
 

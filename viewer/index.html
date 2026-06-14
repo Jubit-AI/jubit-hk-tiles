@@ -23,10 +23,23 @@
       background: rgba(246, 241, 232, 0.82); border: 1px solid #c9c2b6;
       border-radius: 6px; padding: 6px 10px; letter-spacing: 0.2px;
     }
+    /* Map-mode switcher — pick a baked DZI map. */
+    #maps { position: fixed; right: 12px; top: 10px; z-index: 10; display: flex; gap: 6px; }
+    #maps button {
+      font: 600 12px/1.2 -apple-system, system-ui, sans-serif; color: #1f1a17;
+      background: rgba(246, 241, 232, 0.92); border: 1px solid #1f1a17;
+      border-radius: 6px; padding: 6px 10px; cursor: pointer; letter-spacing: 0.2px;
+    }
+    #maps button.active { background: #C7A25B; }
   </style>
 </head>
 <body>
   <div id="title">Yok-Iso HK · soft isometric parchment city</div>
+  <div id="maps">
+    <button data-dzi="central.dzi">Central</button>
+    <button data-dzi="hk-island-strip.dzi">HK Island</button>
+    <button data-dzi="territory.dzi">Territory</button>
+  </div>
   <div id="osd"></div>
   <div id="attribution">
     Building data © <b>The Government of the Hong Kong SAR (Lands Department)</b>,
@@ -39,7 +52,7 @@
     // DZI source: ?dzi=<path> (default the bundled Central sample).
     const params = new URLSearchParams(location.search);
     const dzi = params.get("dzi") || "territory.dzi";  // flagship urban-core map
-    OpenSeadragon({
+    const viewer = OpenSeadragon({
       id: "osd",
       prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
       tileSources: dzi,
@@ -52,6 +65,13 @@
       // pixel-art-friendly: keep edges crisp when zoomed past native res
       imageSmoothingEnabled: false,
     });
+    // Map-mode switcher — swap between the baked DZI maps in place.
+    const mapBtns = [...document.querySelectorAll("#maps button")];
+    const setActive = (d) => mapBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
+    mapBtns.forEach((b) => b.addEventListener("click", () => {
+      viewer.open(b.dataset.dzi); setActive(b.dataset.dzi);
+    }));
+    setActive(dzi);
   </script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+{
+  "_about": "Per-prop placement manifest for the HK-identity layer (the pack's Part-1A output schema). The jubuddy-HK renderer reads this to place game-tiles/props/ sprites on the iso grid (anchor + elevation). Built from the props already baked here (central_render_bake.py --transparent). anchorX/Y are bottom-center per tilespec.anchorConvention; footprint + heightInLevels are ESTIMATES pending the bake emitting true values (the documented 1A extension: central_render_bake.py should append exact anchor/footprint here).",
+  "schemaVersion": 1,
+  "tilespec": "tilespec.json",
+  "props": [
+    {
+      "id": "mongkok-block",
+      "pngPath": "game-tiles/props/prop-mongkok-block.png",
+      "pixelWidth": 1024,
+      "pixelHeight": 1024,
+      "anchorX": 512,
+      "anchorY": 1024,
+      "footprint": [2, 2],
+      "heightInLevels": 6,
+      "_estimate": "footprint + heightInLevels estimated; anchor is convention-default bottom-center — verify ground-contact + extent on hand-finish"
+    },
+    {
+      "id": "tram-dingding",
+      "pngPath": "game-tiles/props/tram-dingding.png",
+      "pixelWidth": 256,
+      "pixelHeight": 300,
+      "anchorX": 128,
+      "anchorY": 300,
+      "footprint": [1, 1],
+      "heightInLevels": 2,
+      "special": "Output E — vintage double-decker; glides along ding-ding-line boards (tram:true)"
+    }
+  ]
+}

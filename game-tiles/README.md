@@ -10,6 +10,7 @@ asset **producer**; the jubuddy-HK game (a later spin-off from jubuddy-game) is 
 |---|---|---|---|
 | **Ground / gameplay** | `iso/` | `scripts/make_ground_tiles.py` (deterministic) | clean, reusable, instantly readable board tiles — gameplay legibility always wins |
 | **Identity props** | `props/` | `central_render_bake.py --transparent` → hand-clean | HK landmarks as transparent sprites, dropped onto the ground |
+| **Ding Ding tram (Output E)** | `props/tram-dingding.png` | `scripts/make_tram.py` (deterministic) | vintage double-decker keepsake (cinnabar, plush). The `ding-ding-line` board (`tram:true`) glides it along the track. |
 | **District boards (Output G)** | `boards/` | `boards/districts.json` (hand-authored) | `MapData`-shaped `{cols,rows,path,slots,blocked}` district topologies; the renderer derives `TileKind` grids. Central / Mong Kok / Kowloon. |
 | **Location cards (Output F)** | `cards/` | `cards/landmarks.json` + baked art | The IP-safe "first 12" as a new `location` card subtype (vs creature cards). 7 renderable from the building layer (`cards/art/`), 5 deferred to the infrastructure layer. Gallery: `cards/index.html`. Legal basis (§71) in the JSON. |
 

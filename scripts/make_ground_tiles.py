@@ -29,9 +29,9 @@ from PIL import Image, ImageDraw
 # ── Palette anchor (aesthetic-spec §1, LOCKED 2026-06-14) ────────────────────
 PARCHMENT = (243, 231, 207)   # F3E7CF rice paper (lightest)
 OFFWHITE  = (243, 231, 207)   # alias → rice paper
-CONC_LT   = (217, 197, 156)   # D9C59C parchment (mid base)
-CONC_MD   = (163, 143, 97)    # ~A38F61 derived warm concrete mid
-CONC_SH   = (94, 82, 56)      # ~5E5238 derived warm concrete shadow
+CONC_LT   = (192, 198, 186)   # cool light concrete (slot pad / sheen) — was warm parchment-tan
+CONC_MD   = (146, 154, 144)   # HK harbour concrete mid (empty ground) — cool grey-green, NOT tan dune
+CONC_SH   = (56, 70, 66)      # deep-harbour stone shadow (blocked) — cool, was warm
 INK       = (26, 26, 23)      # 1A1A17 contour
 GOLD      = (199, 162, 91)    # C7A25B antique gold (slot ring)
 TEAL      = (31, 111, 115)    # 1F6F73 harbour teal (goal)

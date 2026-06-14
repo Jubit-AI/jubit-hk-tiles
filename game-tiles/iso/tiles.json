@@ -1,0 +1,44 @@
+{
+  "source": "make_ground_tiles.py (Yok-Iso HK, deterministic)",
+  "style": "yok_iso_hk_soft_pictorial",
+  "tileKinds": [
+    "empty",
+    "path",
+    "slot",
+    "blocked",
+    "spawn",
+    "goal"
+  ],
+  "sliced": [
+    {
+      "name": "iso-empty",
+      "w": 256,
+      "h": 160
+    },
+    {
+      "name": "iso-path",
+      "w": 256,
+      "h": 160
+    },
+    {
+      "name": "iso-slot",
+      "w": 256,
+      "h": 160
+    },
+    {
+      "name": "iso-blocked",
+      "w": 256,
+      "h": 160
+    },
+    {
+      "name": "iso-spawn",
+      "w": 256,
+      "h": 160
+    },
+    {
+      "name": "iso-goal",
+      "w": 256,
+      "h": 160
+    }
+  ]
+}

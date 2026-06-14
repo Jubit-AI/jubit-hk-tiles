@@ -13,6 +13,7 @@ Lands Dept 3D open data — these PNGs are committed only as a visual reference.
 | `hk-island-strip-map.png` | **Scale test** — a 6×4 (24-tile) multi-district `--viewmap`: Central → Wan Chai → Causeway Bay + Kowloon. Seamless at 6144×4096, 0 failures. Validates the pipeline at multi-district scale. |
 | `central.png` | CBD towers — dense verticality, ink contours, concrete massing |
 | `mong-kok.png` | Dense urban grid — the tuning test bed |
+| `mong-kok-night.png` | **Day↔night re-light** (`--night`) — same geometry dropped into a deep-harbour dusk, accents ignited |
 | `sham-shui-po.png` | Tong-lau tenement density |
 | `victoria-harbour.png` | Harbour treatment — big rice-paper negative space, piers reaching in |
 | `prop-mongkok-block.png` | A **transparent prop sprite** (jubuddy-HK identity layer) — block isolated on alpha |

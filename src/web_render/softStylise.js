@@ -33,6 +33,7 @@ const SoftStyliseShader = {
     // Set >1 only for an optional chunky pixel variant; the shipped look is soft.
     uPixelSize: { value: 1.0 },     // mosaic block in screen px (1 = off / clean)
     uPaletteMix: { value: 0.85 },   // 0=off, 1=full snap to the 15-colour Yok palette
+    uNight: { value: 0.0 },         // 0=day, 1=night re-light (ignite neon accents)
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -44,7 +45,7 @@ const SoftStyliseShader = {
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
     uniform vec2 uResolution;
-    uniform float uCelBands, uWarm, uGrain, uEdge, uPixelSize, uPaletteMix;
+    uniform float uCelBands, uWarm, uGrain, uEdge, uPixelSize, uPaletteMix, uNight;
     varying vec2 vUv;
 
     float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
@@ -119,6 +120,26 @@ const SoftStyliseShader = {
 
       // 5. Snap to the Yok palette (limited-palette = pixel-art + Jubit colours).
       col = mix(col, snapYok(clamp(col, 0.0, 1.0)), uPaletteMix);
+
+      // 6. Day↔night re-light axis (same geometry, never a new composition —
+      // aesthetic-spec §1 HK-neon / §3). NIGHT: drop the neutral city into a
+      // deep-harbour dusk and IGNITE the chroma accents (teal/cinnabar/gold) as
+      // neon. Most of the concrete city is neutral → goes dark; the sparse
+      // accent pixels glow — exactly a HK night skyline.
+      if (uNight > 0.001) {
+        float ch = chroma(col);
+        float l = luma(col);
+        vec3 deepH = vec3(0.051, 0.239, 0.275);   // 0D3D46 deep harbour
+        vec3 dusk  = mix(vec3(0.035, 0.045, 0.055), deepH, clamp(l * 1.25, 0.0, 1.0)) * 0.72;
+        // accents ignite: keep hue, push saturation + brightness (neon bloom)
+        vec3 neon  = clamp(col * 1.7 + ch * 0.6, 0.0, 1.0);
+        // Ignite ONLY saturated, mid-dark pixels (teal/cinnabar/jade signs) — the
+        // warm parchment neutrals are chromatic too but BRIGHT, so the luminance
+        // factor excludes them so the concrete city dusks instead of glowing.
+        float isAccent = smoothstep(0.22, 0.36, ch) * (1.0 - smoothstep(0.48, 0.64, l));
+        vec3 nightCol = mix(dusk, neon, isAccent);
+        col = mix(col, nightCol, uNight);
+      }
 
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), src.a);
     }

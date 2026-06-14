@@ -41,6 +41,8 @@ const STYLE_MODE = urlParams.get("style") === "soft";
 // to the 15-colour Yok palette. Null = use the shader defaults (4 / 0.85).
 const PIXEL_SIZE = urlParams.has("pixel") ? parseFloat(urlParams.get("pixel")) : null;
 const PALETTE_MIX = urlParams.has("palette") ? parseFloat(urlParams.get("palette")) : null;
+// night=true → day↔night re-light (ignite neon accents on the same geometry).
+const NIGHT = urlParams.get("night") === "true";
 // transparent=true → no sky fill; the alpha channel is preserved end-to-end so a
 // tightly-framed landmark bakes as a game-ready PROP SPRITE (the jubuddy-HK
 // identity layer). Screenshot with omit_background to keep the transparency.
@@ -293,6 +295,7 @@ function init() {
     const styliseUniforms = composer.passes[1].uniforms;
     if (PIXEL_SIZE !== null) styliseUniforms.uPixelSize.value = PIXEL_SIZE;
     if (PALETTE_MIX !== null) styliseUniforms.uPaletteMix.value = PALETTE_MIX;
+    if (NIGHT) styliseUniforms.uNight.value = 1.0;
     console.log(
       `🎨 soft-stylise enabled (pixel=${styliseUniforms.uPixelSize.value}, ` +
       `palette=${styliseUniforms.uPaletteMix.value})`

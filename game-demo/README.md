@@ -11,6 +11,12 @@ the full jubuddy-hk repo. It composes the two asset layers (aesthetic-spec §7):
 `slot` pads auto-fire, click a slot to place a tower. Pure `<canvas>` + vanilla
 JS, no build.
 
+**Output G — curated district boards.** The boards load from
+`game-tiles/boards/districts.json` (Central CBD grid · Mong Kok neon maze ·
+Kowloon canyon corridor) — each a `MapData`-shaped `{cols,rows,path,slots,blocked}`
+def from which the renderer derives the `TileKind` grid. A picker switches
+districts live; `?board=<id>` deep-links one.
+
 ## Run
 Serve from the **repo root** (the demo references `/game-tiles/...` absolutely):
 ```bash

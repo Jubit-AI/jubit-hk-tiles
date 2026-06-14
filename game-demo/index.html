@@ -45,6 +45,7 @@
   const TILE_KINDS = ["empty","path","slot","blocked","spawn","goal"];
   const BASE = "/game-tiles/iso/";            // served from repo root
   const PROP_SRC = "/game-tiles/props/prop-mongkok-block.png";
+  const TRAM_SRC = "/game-tiles/props/tram-dingding.png";  // Output E ding-ding
   const IMG_W = 256, IMG_H = 160, DIA_CX = 128, DIA_CY = 80, DIA_H = 128; // PNG geometry
   const S = 0.58;                              // draw scale
   const HW = DIA_CX * S, HH = (DIA_H / 2) * S; // half-width / half-diamond-height steps
@@ -74,6 +75,8 @@
     hp = 20; coins = 120; wave = 1; spawned = 0; spawnTimer = 40;
     // seed two towers on the first two slots so the loop reads as alive
     SLOTS.slice(0,2).forEach(([c,r])=>towers.push({c,r,cool:0}));
+    // Output E: a ding-ding tram glides this board's track
+    tram = def.tram ? { t: 0 } : null;
   }
 
   // ── Iso projection ─────────────────────────────────────────────────────────
@@ -88,7 +91,8 @@
 
   // ── Game state ─────────────────────────────────────────────────────────────
   const imgs = {};
-  let prop = null;
+  let prop = null, tramImg = null;
+  let tram = null;            // Output E: {t} gliding actor on tram boards
   const towers = [];          // {c,r,cool}
   const enemies = [];         // {t, hp, maxhp, x, y, dead}
   const shots = [];           // {x,y,tx,ty,life}
@@ -105,6 +109,12 @@
     const f = e.t - seg;
     const a = PP[seg], b = PP[seg+1];
     return { x: a.x+(b.x-a.x)*f, y: a.y+(b.y-a.y)*f - 14*S }; // lift off the tile
+  }
+  function tramPos(){
+    const seg = Math.min(Math.floor(tram.t), PP.length-2);
+    const f = tram.t - seg;
+    const a = PP[seg], b = PP[seg+1];
+    return { x: a.x+(b.x-a.x)*f, y: a.y+(b.y-a.y)*f };  // sits on the track
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -137,12 +147,17 @@
     ctx.clearRect(0,0,cv.width,cv.height);
     // tiles back-to-front (row-major = iso depth order)
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) drawTile(c,r);
-    // HK identity prop on a decorative blocked cell (props-on-clean-ground)
-    if(prop){ const ctr=cellCenter(0,6); const pw=IMG_W*S*0.9, ph=prop.height*(pw/prop.width);
+    // HK identity prop on a decorative corner cell (props-on-clean-ground).
+    // Skip on the tram board — the ding-ding is its hero element instead.
+    if(prop && !tram){ const ctr=cellCenter(0, Math.min(6, ROWS-1));
+      const pw=IMG_W*S*0.9, ph=prop.height*(pw/prop.width);
       ctx.drawImage(prop, ctr.x-pw/2, ctr.y-ph+DIA_CY*S*0.7, pw, ph); }
-    // depth-sort dynamic actors by screen y
+    // depth-sort dynamic actors by screen y (tram included so it occludes right)
     const actors = [...towers.map(t=>({y:cellCenter(t.c,t.r).y,d:()=>drawTower(t)})),
                     ...enemies.filter(e=>!e.dead).map(e=>({y:enemyPos(e).y,d:()=>drawEnemy(e)}))];
+    if(tram && tramImg){ const p=tramPos(); actors.push({y:p.y, d:()=>{
+      const tw=IMG_W*S*0.92, th=tramImg.height*(tw/tramImg.width);
+      ctx.drawImage(tramImg, p.x-tw/2, p.y-th+DIA_CY*S*0.55, tw, th); }}); }
     actors.sort((a,b)=>a.y-b.y).forEach(a=>a.d());
     // shots
     shots.forEach(s=>{ ctx.strokeStyle="#C7A25B"; ctx.lineWidth=2*S; ctx.beginPath();
@@ -152,6 +167,8 @@
   // ── Update (a minimal but real TD loop) ────────────────────────────────────
   function update(){
     frame++;
+    // Output E: glide the ding-ding along its track, then loop back to the start
+    if(tram){ tram.t += 0.02; if(tram.t >= PP.length-1) tram.t = 0; }
     // spawn waves
     spawnTimer--;
     if(spawnTimer<=0 && spawned<8){ spawnEnemy(); spawned++; spawnTimer=70; }
@@ -212,6 +229,7 @@
   Promise.all([
     ...TILE_KINDS.map(k=>loadImg(`${BASE}iso-${k}.png`).then(im=>{ if(im) imgs[k]=im; })),
     loadImg(PROP_SRC).then(im=>{ prop=im; }),
+    loadImg(TRAM_SRC).then(im=>{ tramImg=im; }),
     fetch(BOARDS_SRC).then(r=>r.json()).then(j=>{ BOARDS=j.boards||[]; }).catch(()=>{ BOARDS=[]; }),
   ]).then(()=>{
     if(!BOARDS.length){ document.getElementById("stat").textContent="failed to load district boards"; return; }

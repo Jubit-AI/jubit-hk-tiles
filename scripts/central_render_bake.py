@@ -312,6 +312,9 @@ def render_all(tiles, args, az, el, out_dir, launch_args) -> tuple[int, int]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bake HK isometric tiles (grid or named locations)")
     parser.add_argument("--limit", type=int, default=None, help="render only the first N tiles")
+    parser.add_argument("--only", type=str, default=None,
+                        help="comma-separated tile labels (e.g. r2_c7,r3_c8) to bake — for "
+                             "targeted retry of specific failed tiles without re-baking the grid")
     parser.add_argument("--locations", type=Path, default=None,
                         help="render named locations from a JSON file (e.g. scripts/locations.json) "
                              "instead of the Central grid")
@@ -385,6 +388,10 @@ def main() -> int:
     else:
         tiles = list(grid_centers())
         out_dir = REPO / "scripts" / "out" / (args.out_dir or "central")
+    if args.only:
+        want = {s.strip() for s in args.only.split(",") if s.strip()}
+        tiles = [t for t in tiles if t[0] in want]
+        print(f"🎯 --only: baking {len(tiles)} of the requested {len(want)} tiles: {sorted(want)}")
     if args.limit:
         tiles = tiles[: args.limit]
     out_dir.mkdir(parents=True, exist_ok=True)

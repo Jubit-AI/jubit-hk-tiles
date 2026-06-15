@@ -21,6 +21,11 @@ from pathlib import Path
 
 from PIL import Image
 
+# Our own stitched territory maps exceed Pillow's default 178M-pixel bomb guard
+# (a 24576×16384 urban-HK stitch is ~402M px). The input is our trusted bake, not
+# untrusted upload, so lift the cap.
+Image.MAX_IMAGE_PIXELS = None
+
 DZI_XML = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<Image TileSize="{ts}" Overlap="{ov}" Format="{fmt}" '

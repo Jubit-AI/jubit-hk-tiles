@@ -169,6 +169,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         "azimuth": az, "elevation": el, "view_height": view_h,
     }
     params.update(extra)  # e.g. setViewOffset tile_col/row/cols/rows
+    if args.layer:
+        params["layer"] = args.layer  # building (default) | infrastructure | visualisation (f2)
     if args.style == "soft":
         params["style"] = "soft"
         if args.pixel is not None:
@@ -179,6 +181,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
             params["night"] = "true"
         if args.vector:
             params["vector"] = "true"
+        if args.weather:
+            params["scenario"] = args.weather
     if args.transparent:
         params["transparent"] = "true"
     q = urlencode(params)
@@ -206,7 +210,11 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         page.on("console", _on_console)
         page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
         url = f"http://localhost:{PORT}/?{q}"
-        page.goto(url, wait_until="networkidle")
+        # domcontentloaded (not networkidle): f2 streams tiles continuously and may
+        # never hit networkidle within the default 30s goto timeout. The real
+        # readiness signal is the window.TILES_LOADED gate below (downloading+parsing
+        # idle for ≥1s), which respects --tile-timeout.
+        page.goto(url, wait_until="domcontentloaded", timeout=args.tile_timeout)
         try:
             page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
             loaded = True
@@ -240,6 +248,11 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         tex_note = f"{total - no_map}/{total} tex"
         if not loaded:
             status, icon = "timeout", "⚠️ "
+        elif args.layer == "visualisation":
+            # f2 renders untextured base-colour geometry BY DESIGN (we stylise it +
+            # sea-fill the empties); 0/N textures is the expected good case here, not
+            # a whitebox failure. Only a true exception (caught below) or timeout fails.
+            status, icon = f"ok(viz {tex_note})", "✅"
         elif inv.get("initFailed") or untex_frac > 0.20:
             status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
             failed = True
@@ -354,9 +367,18 @@ def main() -> int:
     parser.add_argument("--vector", action="store_true",
                         help="soft only: stylized-vector-illustration preset — flatter cel "
                              "fills, hard palette flats, bold clean outline, no grain")
+    parser.add_argument("--weather", choices=["golden", "rain", "typhoon"], default=None,
+                        help="soft only: weather/time scenario (golden-hour / rain / typhoon); "
+                             "day↔night uses --night. Live counterpart of weather_grade.py "
+                             "(the seamless baked-variant path).")
     parser.add_argument("--transparent", action="store_true",
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")
+    parser.add_argument("--layer", choices=["building", "infrastructure", "visualisation"],
+                        default="building",
+                        help="which HK Lands Dept 3D tileset to bake: building (default, 3dsd "
+                             "buildings only) | infrastructure | visualisation (the f2 map: "
+                             "terrain + waterbody + vegetation + infrastructure + buildings)")
     parser.add_argument("--map", type=str, default=None,
                         help="[superseded by --viewmap] move-camera grid: "
                              "'lat,lon,cols,rows,footprint_m'. Leaves seams; kept for reference.")

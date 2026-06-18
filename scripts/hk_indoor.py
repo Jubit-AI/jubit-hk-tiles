@@ -45,3 +45,54 @@ def curate(levels_fc, units_fc, doors_fc, keep_levels, shop_cats, origin):
         doors.append({"level": p["level_ordinal"], "a": [round(cs[0][0], 2), round(cs[0][1], 2)],
                       "b": [round(cs[-1][0], 2), round(cs[-1][1], 2)]})
     return {"levels": levels, "units": units, "doors": doors}
+
+
+def fetch(layer, venue_id, key):
+    q = {"key": key, "service": "WFS", "version": "2.0.0", "request": "GetFeature",
+         "outputFormat": "application/json", "cql_filter": f"venue_id='{venue_id}'"}
+    url = f"{WFS}/{layer}?" + urllib.parse.urlencode(q)
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "jubuddy/1.0"}), timeout=90) as r:
+        return json.load(r)
+
+
+def venue_origin(levels_fc):
+    pts = []
+    for f in levels_fc["features"]:
+        for coord in _outer_ring(f["geometry"]):
+            pts.append((coord[0], coord[1]))
+    return (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+
+
+def _to2d(fc):
+    """Strip Z from all coordinates so curate() unpacking (x, y) works on 3D WFS data."""
+    import copy
+    fc2 = copy.deepcopy(fc)
+    for f in fc2["features"]:
+        g = f["geometry"]
+        def drop_z(coords):
+            if not coords:
+                return coords
+            if isinstance(coords[0], (int, float)):
+                return coords[:2]
+            return [drop_z(c) for c in coords]
+        g["coordinates"] = drop_z(g["coordinates"])
+    return fc2
+
+
+if __name__ == "__main__":
+    key = next((a for a in sys.argv[1:] if not a.startswith("--")), "")
+    venue = APM
+    keep = [int(x) for x in (sys.argv[sys.argv.index("--levels") + 1].split(",")
+                             if "--levels" in sys.argv else ["0", "1", "2"])]
+    lv = _to2d(fetch("level_polygon", venue, key))
+    un = _to2d(fetch("unit_polygon", venue, key))
+    op = _to2d(fetch("opening_line", venue, key))
+    origin = venue_origin(lv)
+    cats = {"room", "foodservice", "unspecified", "lobby", "auditorium", "theater",
+            "mothersroom", "office", "restroom.female", "restroom.male", "restroom.wheelchair"}
+    doc = curate(lv, un, op, keep, cats, origin)
+    doc["venue"] = {"id": venue, "name": "APM Millennium City 5"}
+    doc["origin"] = {"lon": origin[0], "lat": origin[1]}
+    out = "/Users/jubit_nb0/jubuddy-hk/src/planet/hk-indoor-apm.json"
+    json.dump(doc, open(out, "w"))
+    print(f"levels={len(doc['levels'])} units={len(doc['units'])} doors={len(doc['doors'])} -> {out}")

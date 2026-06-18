@@ -18,8 +18,15 @@ def poly_centroid(ring):
 
 
 def _outer_ring(geom):
-    c = geom["coordinates"]
-    return c[0] if geom["type"] == "Polygon" else c
+    c = geom.get("coordinates") or []
+    t = geom.get("type")
+    if t == "Polygon":
+        return c[0] if c else []
+    if t == "MultiPolygon":              # MTR levels/units are often MultiPolygon — take the first ring
+        return c[0][0] if c and c[0] else []
+    if t == "MultiLineString":
+        return c[0] if c else []
+    return c                             # LineString / other
 
 
 def curate(levels_fc, units_fc, doors_fc, keep_levels, shop_cats, origin):
@@ -33,6 +40,8 @@ def curate(levels_fc, units_fc, doors_fc, keep_levels, shop_cats, origin):
         if p["level_ordinal"] not in keep_levels or p.get("unit_category") not in shop_cats:
             continue
         ring = [project(x, y, origin) for x, y in _outer_ring(f["geometry"])]
+        if len(ring) < 3:
+            continue
         units.append({"level": p["level_ordinal"], "poly": [[round(x, 2), round(y, 2)] for x, y in ring],
                       "centroid": poly_centroid(ring), "category": p.get("unit_category"),
                       "name": p.get("unit_name_en") or p.get("unit_unitnumbername") or "Shop"})
@@ -42,6 +51,8 @@ def curate(levels_fc, units_fc, doors_fc, keep_levels, shop_cats, origin):
         if p["level_ordinal"] not in keep_levels:
             continue
         cs = [project(x, y, origin) for x, y in _outer_ring(f["geometry"])]
+        if len(cs) < 2:
+            continue
         doors.append({"level": p["level_ordinal"], "a": [round(cs[0][0], 2), round(cs[0][1], 2)],
                       "b": [round(cs[-1][0], 2), round(cs[-1][1], 2)]})
     return {"levels": levels, "units": units, "doors": doors}
@@ -79,20 +90,27 @@ def _to2d(fc):
     return fc2
 
 
+MTR_VENUE = "b9b2f6ff-582d-40b0-b82d-027e950e6791"  # Admiralty Station (4-line interchange)
+
 if __name__ == "__main__":
     key = next((a for a in sys.argv[1:] if not a.startswith("--")), "")
-    venue = APM
+    mtr = "--mtr" in sys.argv
+    pre = "mtr_" if mtr else ""                       # MTR layers are mtr_-prefixed on the same WFS
+    venue = MTR_VENUE if mtr else APM
+    default_levels = ["0", "-2", "-3", "-4"] if mtr else ["0", "1", "2"]
     keep = [int(x) for x in (sys.argv[sys.argv.index("--levels") + 1].split(",")
-                             if "--levels" in sys.argv else ["0", "1", "2"])]
-    lv = _to2d(fetch("level_polygon", venue, key))
-    un = _to2d(fetch("unit_polygon", venue, key))
-    op = _to2d(fetch("opening_line", venue, key))
+                             if "--levels" in sys.argv else default_levels)]
+    lv = _to2d(fetch(pre + "level_polygon", venue, key))
+    un = _to2d(fetch(pre + "unit_polygon", venue, key))
+    op = _to2d(fetch(pre + "opening_line", venue, key))
     origin = venue_origin(lv)
-    cats = {"room", "foodservice", "unspecified", "lobby", "auditorium", "theater",
-            "mothersroom", "office", "restroom.female", "restroom.male", "restroom.wheelchair"}
+    cats = ({"platform", "walkway", "lobby", "room", "unspecified", "movingwalkway",
+             "escalator", "stairs", "steps", "elevator", "restroom.unisex", "restroom.female"} if mtr
+            else {"room", "foodservice", "unspecified", "lobby", "auditorium", "theater",
+                  "mothersroom", "office", "restroom.female", "restroom.male", "restroom.wheelchair"})
     doc = curate(lv, un, op, keep, cats, origin)
-    doc["venue"] = {"id": venue, "name": "APM Millennium City 5"}
+    doc["venue"] = {"id": venue, "name": "Admiralty Station" if mtr else "APM Millennium City 5"}
     doc["origin"] = {"lon": origin[0], "lat": origin[1]}
-    out = "/Users/jubit_nb0/jubuddy-hk/src/planet/hk-indoor-apm.json"
+    out = "/Users/jubit_nb0/jubuddy-hk/src/planet/" + ("hk-indoor-mtr.json" if mtr else "hk-indoor-apm.json")
     json.dump(doc, open(out, "w"))
-    print(f"levels={len(doc['levels'])} units={len(doc['units'])} doors={len(doc['doors'])} -> {out}")
+    print(f"{'MTR ' if mtr else ''}levels={len(doc['levels'])} units={len(doc['units'])} doors={len(doc['doors'])} -> {out}")

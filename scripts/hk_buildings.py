@@ -128,27 +128,28 @@ def walk(tileset_url, incoming):
             stack.append((ch, x))
 
 
-walk(BUILDING_TS, IDENT)
+if __name__ == "__main__":
+    walk(BUILDING_TS, IDENT)
 
-MAX_OUT = 12000  # InstancedMesh-friendly; keep the tallest (the skyline reads first)
-if len(buildings) > MAX_OUT:
-    buildings.sort(key=lambda b: -b["h"])
-    buildings = buildings[:MAX_OUT]
+    MAX_OUT = 12000  # InstancedMesh-friendly; keep the tallest (the skyline reads first)
+    if len(buildings) > MAX_OUT:
+        buildings.sort(key=lambda b: -b["h"])
+        buildings = buildings[:MAX_OUT]
 
-if buildings:
-    hs = sorted(b["h"] for b in buildings)
-    ws = sorted(max(b["w"], b["d"]) for b in buildings)
-    print(f"fetches={_fetches[0]}  buildings in bbox={len(buildings)}")
-    print(f"height m    min/med/max = {hs[0]:.0f} / {hs[len(hs)//2]:.0f} / {hs[-1]:.0f}")
-    print(f"footprint m min/med/max = {ws[0]:.0f} / {ws[len(ws)//2]:.0f} / {ws[-1]:.0f}")
-    print(f"sample: {buildings[len(buildings)//2]}")
-else:
-    print(f"fetches={_fetches[0]}  NO buildings collected")
+    if buildings:
+        hs = sorted(b["h"] for b in buildings)
+        ws = sorted(max(b["w"], b["d"]) for b in buildings)
+        print(f"fetches={_fetches[0]}  buildings in bbox={len(buildings)}")
+        print(f"height m    min/med/max = {hs[0]:.0f} / {hs[len(hs)//2]:.0f} / {hs[-1]:.0f}")
+        print(f"footprint m min/med/max = {ws[0]:.0f} / {ws[len(ws)//2]:.0f} / {ws[-1]:.0f}")
+        print(f"sample: {buildings[len(buildings)//2]}")
+    else:
+        print(f"fetches={_fetches[0]}  NO buildings collected")
 
-if not PROBE and buildings:
-    doc = {"source": "Open3Dhk / HK Lands Dept via DATA.GOV.HK (3D Spatial Data, transformed)",
-           "bbox": [LON0, LAT0, LON1, LAT1], "origin": {"lon": (LON0 + LON1) / 2, "lat": (LAT0 + LAT1) / 2},
-           "buildings": buildings}
-    with open(OUT, "w") as f:
-        json.dump(doc, f)
-    print(f"wrote {len(buildings)} buildings -> {OUT}")
+    if not PROBE and buildings:
+        doc = {"source": "Open3Dhk / HK Lands Dept via DATA.GOV.HK (3D Spatial Data, transformed)",
+               "bbox": [LON0, LAT0, LON1, LAT1], "origin": {"lon": (LON0 + LON1) / 2, "lat": (LAT0 + LAT1) / 2},
+               "buildings": buildings}
+        with open(OUT, "w") as f:
+            json.dump(doc, f)
+        print(f"wrote {len(buildings)} buildings -> {OUT}")

@@ -251,6 +251,35 @@ def simplify_graph(doc):
     return _emit(out_nodes, out_edges)
 
 
+def trim_to_access_points(doc):
+    """Drop 'street' nodes that are NOT access points to the elevated deck, plus any edge that
+    references a dropped node. A street node is an ACCESS POINT iff it is an endpoint of an edge
+    whose OTHER endpoint is a podium/skybridge node (an escalator/lift foot or footbridge landing).
+
+    Why: the tiny-planet courier walks the route board for its street layer and only needs the
+    imported street nodes where the elevated deck touches the ground. The strataGraph.ts consumer
+    already applies this EXACT filter at load (importedAccessPointStreetIds), so trimming here
+    keeps the runtime nav-graph byte-identical while cutting ~11.6k street nodes + ~17k edges that
+    fed nothing — shrinking the bundled/served asset from ~3.5 MB to ~1.1 MB. Pure: takes/returns
+    the {strata,nodes,edges,attribution} doc."""
+    stratum = {n["id"]: n["stratum"] for n in doc["nodes"]}
+
+    def is_deck(nid):
+        return stratum.get(nid) in ("podium", "skybridge")
+
+    access = set()
+    for e in doc["edges"]:
+        if stratum.get(e["a"]) == "street" and is_deck(e["b"]):
+            access.add(e["a"])
+        if stratum.get(e["b"]) == "street" and is_deck(e["a"]):
+            access.add(e["b"])
+
+    keep = {nid for nid, s in stratum.items() if s != "street" or nid in access}
+    nodes = [n for n in doc["nodes"] if n["id"] in keep]
+    edges = [e for e in doc["edges"] if e["a"] in keep and e["b"] in keep]
+    return _emit(nodes, edges)
+
+
 def fetch_core(page=3000, src="wgs84"):
     """Page the MapServer layer-0 query over the CORE bbox, returning one merged FeatureCollection
     of WGS84 lon/lat + z LineStrings. outSR=4326 makes the server reproject from WKID 2326 for us."""
@@ -287,11 +316,15 @@ if __name__ == "__main__":
     doc = simplify_graph(doc)  # collapse per-vertex polylines to a junction-topology nav-graph
     if not doc["nodes"]:
         sys.exit("FATAL: simplification emptied the graph — connectivity drift?")
+    simplified_n = len(doc["nodes"])
+    doc = trim_to_access_points(doc)  # drop non-access-point street nodes (see strataGraph.ts)
+    if not doc["nodes"]:
+        sys.exit("FATAL: trim emptied the graph — no elevated-deck access points found?")
     out = ("/Users/jubit_nb0/.config/superpowers/worktrees/jubuddy-game/graft-real-planet/"
            "apps/web/src/planet/sphere/assets/hk-strata.json")
-    json.dump(doc, open(out, "w"))
+    json.dump(doc, open(out, "w"), separators=(",", ":"))  # compact: no whitespace bloat
     counts = {}
     for n in doc["nodes"]:
         counts[n["stratum"]] = counts.get(n["stratum"], 0) + 1
-    print(f"raw_vertices={raw_n} -> nodes={len(doc['nodes'])} edges={len(doc['edges'])} "
-          f"strata={counts} -> {out}")
+    print(f"raw_vertices={raw_n} -> simplified={simplified_n} -> trimmed_nodes={len(doc['nodes'])} "
+          f"edges={len(doc['edges'])} strata={counts} -> {out}")

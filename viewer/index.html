@@ -31,6 +31,12 @@
       border-radius: 6px; padding: 6px 10px; cursor: pointer; letter-spacing: 0.2px;
     }
     #maps button.active { background: #C7A25B; }
+    /* Interlink → the jubuddy 3D toy planet (teal, to stand apart from the maps). */
+    #maps a {
+      font: 600 12px/1.2 -apple-system, system-ui, sans-serif; color: #fff;
+      background: #1d9e75; border: 1px solid #0f6e56; text-decoration: none;
+      border-radius: 6px; padding: 6px 10px; cursor: pointer; letter-spacing: 0.2px;
+    }
     /* Phase B — weather/time scenario switcher (variants of the Territory map). */
     #scenarios { position: fixed; right: 12px; top: 48px; z-index: 10; display: flex; gap: 6px; }
     #scenarios button {
@@ -48,6 +54,8 @@
     <button data-dzi="hk-island-strip.dzi">HK Island</button>
     <button data-dzi="territory.dzi">Territory</button>
     <button data-dzi="central-hd.dzi" title="Central + Victoria Harbour at 2× detail">Central HD</button>
+    <a id="planetLink" href="https://jubuddy.com/planet" target="_blank" rel="noopener noreferrer"
+       title="Open this area as a 3D toy planet on jubuddy.com">🌏 3D planet</a>
   </div>
   <div id="scenarios">
     <button data-dzi="territory.dzi" data-scenario="day">Day</button>
@@ -91,6 +99,17 @@
     const scenBtns = [...document.querySelectorAll("#scenarios button")];
     const setMapActive = (d) => mapBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
     const setScenActive = (d) => scenBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
+    // Interlink: point the "3D planet" link at the jubuddy planet district for the
+    // active DZI (graceful: an unmapped/territory map → the planet home).
+    const ISO_TO_PLANET = {
+      "central.dzi": "central-harbour", "central-hd.dzi": "central-harbour",
+      "the-peak-hd.dzi": "the-peak", "tst-hd.dzi": "tsim-sha-tsui", "mongkok-hd.dzi": "mong-kok",
+    };
+    const planetLink = document.getElementById("planetLink");
+    const syncPlanetLink = (d) => {
+      const id = ISO_TO_PLANET[d];
+      planetLink.href = id ? "https://jubuddy.com/planet?district=" + id : "https://jubuddy.com/planet";
+    };
     // Weather/time scenarios are variants of the Territory map only — they're
     // enabled when Territory is the active base, disabled (greyed) otherwise.
     const territoryActive = (d) => d.startsWith("territory");
@@ -98,7 +117,7 @@
 
     mapBtns.forEach((b) => b.addEventListener("click", () => {
       const d = b.dataset.dzi;
-      viewer.open(d); setMapActive(d); syncScenAvail(d);
+      viewer.open(d); setMapActive(d); syncScenAvail(d); syncPlanetLink(d);
       setScenActive(territoryActive(d) ? "territory.dzi" : null); // base map = Day
     }));
     scenBtns.forEach((b) => b.addEventListener("click", () => {
@@ -115,7 +134,7 @@
       }
     });
 
-    setMapActive(dzi); syncScenAvail(dzi); setScenActive(territoryActive(dzi) ? "territory.dzi" : null);
+    setMapActive(dzi); syncScenAvail(dzi); syncPlanetLink(dzi); setScenActive(territoryActive(dzi) ? "territory.dzi" : null);
   </script>
 </body>
 </html>

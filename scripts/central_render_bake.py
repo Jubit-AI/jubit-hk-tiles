@@ -454,7 +454,10 @@ def main() -> int:
     launch_args = ["--enable-webgl", "--use-gl=angle", "--ignore-gpu-blocklist",
                    "--disk-cache-size=1", "--media-cache-size=1"]
     if args.disable_web_security:
-        launch_args += ["--disable-web-security", f"--user-data-dir=/tmp/hk-bake-{PORT}"]
+        # NOTE: Playwright's launch() supplies its own (non-default) profile dir and
+        # REJECTS an explicit --user-data-dir arg, so don't add one — --disable-web-
+        # security still takes effect against Playwright's temp profile.
+        launch_args += ["--disable-web-security"]
 
     server = start_server()
     saved, failed = 0, 0

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "dzi": "hk-airport-hd.dzi",
+  "image": {
+    "width": 8192,
+    "height": 6144
+  },
+  "tile": {
+    "size": 256,
+    "overlap": 1,
+    "format": "png"
+  },
+  "center": {
+    "lat": 22.315,
+    "lon": 113.92
+  },
+  "projection": {
+    "type": "orthographic-dimetric",
+    "azimuthDeg": -15.0,
+    "elevationDeg": -26.565,
+    "viewHeightMeters": 3300.0,
+    "targetHeightMeters": 5.0,
+    "metersPerDegLat": 111320.0
+  },
+  "bboxOrder": "[w,s,e,n]",
+  "bbox": [
+    113.89009267494866,
+    22.277870972420136,
+    113.94990732505134,
+    22.352129027579867
+  ],
+  "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+}

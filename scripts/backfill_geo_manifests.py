@@ -40,7 +40,7 @@ DISTRICTS = {
     "sha-tin": (22.3820, 114.1880),
     "tian-tan-buddha": (22.2540, 113.9050),
     "hk-disneyland": (22.3130, 114.0430),
-    "hk-airport": (22.3100, 113.9200),
+    "hk-airport": (22.315, 113.9200),   # enlarged re-bake (vh 3300, see VH_OVERRIDE)
     "tsing-ma-bridge": (22.3510, 114.0730),
     "wong-tai-sin": (22.3420, 114.1930),
     "ocean-park": (22.2460, 114.1750),
@@ -52,6 +52,8 @@ DISTRICTS = {
 # All HD districts share the same grid: 8 cols × 6 rows × 1024 canvas.
 HD_IMAGE = (8 * 1024, 6 * 1024)  # 8192 × 6144
 HD_VIEW_HEIGHT = 1500.0
+# Per-district view_height overrides (re-baked with a wider frame than the 1500 default).
+VH_OVERRIDE = {"hk-airport": 3300.0}  # enlarged to fit the whole ~4km HKIA
 
 # Overview maps — PROVISIONAL params (see module docstring). image sizes are the
 # real baked DZI dimensions; center/view_height are best-estimates pending a fit.
@@ -71,7 +73,8 @@ def main() -> int:
         dzi = f"{name}-hd.dzi"
         m = gt.build_manifest(
             dzi=dzi, image_width=HD_IMAGE[0], image_height=HD_IMAGE[1],
-            center_lat=clat, center_lon=clon, view_height_meters=HD_VIEW_HEIGHT,
+            center_lat=clat, center_lon=clon,
+            view_height_meters=VH_OVERRIDE.get(name, HD_VIEW_HEIGHT),
         )
         (viewer / f"{name}-hd.geo.json").write_text(json.dumps(m, indent=2))
         manifests[dzi] = m

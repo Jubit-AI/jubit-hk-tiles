@@ -10,22 +10,29 @@ one of our baked DZI images, and back. Three consumers depend on it:
 It reproduces the projection the renderer bakes with (web_render/main.js
 `positionCamera` → `WGS84_ELLIPSOID.getObjectFrame(lat,lon,TARGET_HEIGHT,az,el)`
 + an OrthographicCamera whose vertical extent is `view_height_meters`, tiled
-seamlessly with `setViewOffset`). The bake's own `central_render_bake.map_grid`
-docstring pins the ground relationship we mirror EXACTLY:
+seamlessly with `setViewOffset`). The tiles are placed on the TRUE WGS84 ELLIPSOID
+(ECEF), so we project on the ellipsoid too — a flat-earth tangent-plane drifts from
+the tiles by the Earth's curvature + the ellipsoid flattening + the tangent-plane
+sagitta (a few px at district scale but ~90 px at the whole-HK territory edges).
 
-  * longitude (east–west) maps to screen-horizontal at FULL scale,
-  * latitude  (north–south) maps to screen-vertical FORESHORTENED by sin(elev)
-    (elev = -26.565° → sin = 0.4472 = the classic 2:1 dimetric ratio),
-  * flat-earth metres/degree = 111320 (NOT the ellipsoid radius — match the bake),
-  * a camera azimuth (heading, default -15°) rotates the whole ground plane in-frame.
+Forward projection (geo → pixel), matching the bake:
+  * (lat, lon, h=TARGET_HEIGHT) → ECEF on the WGS84 ellipsoid, expressed in the map
+    centre's East/North/Up basis (the exact ellipsoid ground offset, with the
+    tangent-plane sagitta as the Up component);
+  * azimuth (heading, default -15°) rotates East/North into screen axes;
+  * elevation (-26.565°) foreshortens the screen-forward axis by sin(elev) AND the
+    Up/sagitta by cos(elev) — the classic 2:1 dimetric tilt;
+  * scale by ppm = image_height / view_height_meters, centre on the image.
 
-Because the map is orthographic and each area spans at most a few tens of km, a
-local-ENU tangent-plane approximation is sub-pixel accurate — no ECEF needed.
+AZIMUTH SIGN (`AZIMUTH_SIGN`, default +1): the getObjectFrame heading convention,
+verified against a known-bearing landmark pair (see test_geo_transform). The rotate
+lives in `project`; flip the constant if the bearing test fails. (A direct port of
+getObjectFrame's full 3D Euler flips the screen-x — the decomposed form here keeps
+the empirically-verified orientation, so don't "simplify" it to a raw matrix.)
 
-AZIMUTH SIGN: getObjectFrame's heading-sign convention is pinned empirically in
-the verification step (project a known landmark, eyeball it on the DZI). The sign
-lives in ONE place: `_rotate` below. If a landmark lands rotated the wrong way
-about the centre, flip `AZIMUTH_SIGN`.
+The inverse `unproject` (pixel → geo) keeps a cheap flat-earth approximation — it is
+only used for the `bbox` bounds hint + a COARSE nearest-district pick, where metre-
+level error is irrelevant. `project` is the authoritative, ellipsoid-exact direction.
 """
 from __future__ import annotations
 
@@ -49,18 +56,45 @@ DEFAULT_TARGET_HEIGHT_M = 5.0
 # plane by -azimuth into screen axes; flip to -1 if landmark validation says so.
 AZIMUTH_SIGN = 1.0
 
+# WGS84 ellipsoid — the exact figure the bake places tiles on (3d-tiles-renderer's
+# WGS84_ELLIPSOID). We project on this same ellipsoid so actors don't drift from the
+# tiles by the Earth's curvature + flattening (tens of px at whole-HK territory scale).
+WGS84_A = 6378137.0                      # semi-major axis (m)
+WGS84_F = 1.0 / 298.257223563            # flattening
+WGS84_E2 = WGS84_F * (2.0 - WGS84_F)     # first eccentricity squared
+
+
+def _ecef(lat: float, lon: float, height: float) -> tuple[float, float, float]:
+    """Geodetic (lat, lon, h) -> ECEF (X, Y, Z) on the WGS84 ellipsoid (metres)."""
+    la, lo = math.radians(lat), math.radians(lon)
+    n = WGS84_A / math.sqrt(1.0 - WGS84_E2 * math.sin(la) ** 2)
+    cos_la = math.cos(la)
+    return (
+        (n + height) * cos_la * math.cos(lo),
+        (n + height) * cos_la * math.sin(lo),
+        (n * (1.0 - WGS84_E2) + height) * math.sin(la),
+    )
+
+
+def _enu_basis(lat: float, lon: float) -> tuple[tuple[float, float, float], ...]:
+    """East / North / Up unit vectors (ECEF) of the tangent frame at (lat, lon)."""
+    la, lo = math.radians(lat), math.radians(lon)
+    sin_la, cos_la, sin_lo, cos_lo = (
+        math.sin(la), math.cos(la), math.sin(lo), math.cos(lo),
+    )
+    east = (-sin_lo, cos_lo, 0.0)
+    north = (-sin_la * cos_lo, -sin_la * sin_lo, cos_la)
+    up = (cos_la * cos_lo, cos_la * sin_lo, sin_la)
+    return east, north, up
+
+
+def _dot(a: tuple[float, float, float], b: tuple[float, float, float]) -> float:
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
 
 def _meters_per_deg_lon(center_lat: float) -> float:
+    """Flat-earth metres/deg lon — used only by the coarse `unproject` inverse."""
     return METERS_PER_DEG_LAT * math.cos(math.radians(center_lat))
-
-
-def _rotate(east: float, north: float, azimuth_deg: float) -> tuple[float, float]:
-    """Rotate an ENU ground offset (m) into (screen-right, screen-forward) axes."""
-    a = math.radians(azimuth_deg) * AZIMUTH_SIGN
-    ca, sa = math.cos(a), math.sin(a)
-    xr = east * ca + north * sa    # screen-right (metres, full scale)
-    yf = -east * sa + north * ca   # screen-forward along ground (metres, foreshortened)
-    return xr, yf
 
 
 def _unrotate(xr: float, yf: float, azimuth_deg: float) -> tuple[float, float]:
@@ -71,33 +105,66 @@ def _unrotate(xr: float, yf: float, azimuth_deg: float) -> tuple[float, float]:
     return east, north
 
 
-def _proj(manifest: dict[str, Any]) -> dict[str, float]:
+def _proj(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Derive (and pre-compute the ellipsoid frame for) a manifest's projection.
+
+    The centre's ECEF position + ENU basis are the same for every point on a map, so
+    they're computed once here rather than per actor per frame.
+    """
     p = manifest["projection"]
     img = manifest["image"]
+    clat, clon = manifest["center"]["lat"], manifest["center"]["lon"]
+    target_h = p.get("targetHeightMeters", DEFAULT_TARGET_HEIGHT_M)
+    east, north, up = _enu_basis(clat, clon)
+    el = math.radians(abs(p["elevationDeg"]))
     return {
-        "clat": manifest["center"]["lat"],
-        "clon": manifest["center"]["lon"],
+        "clat": clat, "clon": clon,
         "az": p["azimuthDeg"],
-        "sin_el": math.sin(math.radians(abs(p["elevationDeg"]))) or 1.0,
+        "sin_el": math.sin(el) or 1.0,
+        "cos_el": math.cos(el),
         "ppm": img["height"] / p["viewHeightMeters"],  # px per screen-metre (isotropic)
         "w": img["width"],
         "h": img["height"],
+        "target_h": target_h,
+        "c_ecef": _ecef(clat, clon, target_h),
+        "E": east, "N": north, "U": up,
     }
 
 
 def project(manifest: dict[str, Any], lat: float, lon: float) -> tuple[float, float]:
-    """(lat, lon) -> (px, py) in the DZI's full-resolution image pixels."""
+    """(lat, lon) -> (px, py) in the DZI's full-resolution image pixels.
+
+    Exact WGS84-ellipsoid projection: the point's ECEF offset from the map centre is
+    resolved onto the centre's East/North/Up axes, azimuth-rotated into screen axes,
+    then the forward axis is foreshortened by sin(el) and the Up/sagitta term by
+    cos(el) — matching the bake's getObjectFrame + dimetric orthographic camera.
+    """
     m = _proj(manifest)
-    east = (lon - m["clon"]) * _meters_per_deg_lon(m["clat"])
-    north = (lat - m["clat"]) * METERS_PER_DEG_LAT
-    xr, yf = _rotate(east, north, m["az"])
+    p = _ecef(lat, lon, m["target_h"])
+    c = m["c_ecef"]
+    d = (p[0] - c[0], p[1] - c[1], p[2] - c[2])
+    east = _dot(m["E"], d)     # exact ellipsoid ground offset (curvature + flattening)
+    north = _dot(m["N"], d)
+    up = _dot(m["U"], d)       # tangent-plane sagitta (≈ -curve drop at the edges)
+    a = math.radians(m["az"]) * AZIMUTH_SIGN
+    ca, sa = math.cos(a), math.sin(a)
+    xr = east * ca + north * sa                 # screen-right (metres, full scale)
+    yf = -east * sa + north * ca                # screen-forward along ground (metres)
     px = m["w"] / 2.0 + xr * m["ppm"]
-    py = m["h"] / 2.0 - yf * m["sin_el"] * m["ppm"]  # north/forward = up, image-y down
+    py = m["h"] / 2.0 - (yf * m["sin_el"] + up * m["cos_el"]) * m["ppm"]
     return px, py
 
 
 def unproject(manifest: dict[str, Any], px: float, py: float) -> tuple[float, float]:
-    """(px, py) -> (lat, lon). Exact inverse of project()."""
+    """(px, py) -> (lat, lon). COARSE flat-earth inverse of project().
+
+    NOT the exact inverse of the ellipsoid `project()` — it neglects curvature +
+    flattening + sagitta (the very terms `project` adds), so it drifts by ~metres in a
+    district and ~tens of metres at the territory edge. That's fine for its only two
+    callers — the `bbox` bounds hint and the coarse nearest-district pick — where the
+    answer is a rough envelope / an argmin, not a placement. Never use it to place an
+    actor; use `project()` for anything ellipsoid-exact.
+    """
     m = _proj(manifest)
     xr = (px - m["w"] / 2.0) / m["ppm"]
     yf = (m["h"] / 2.0 - py) / (m["ppm"] * m["sin_el"])

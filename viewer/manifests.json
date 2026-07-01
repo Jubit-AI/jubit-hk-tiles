@@ -758,6 +758,39 @@
     ],
     "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
   },
+  "central.dzi": {
+    "schemaVersion": 1,
+    "dzi": "central.dzi",
+    "image": {
+      "width": 3072,
+      "height": 3072
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.2815,
+      "lon": 114.16
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 1200.0,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.15100265525444,
+      22.268463535506537,
+      114.16899734474555,
+      22.294536464493465
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
   "hk-island-strip.dzi": {
     "schemaVersion": 1,
     "dzi": "hk-island-strip.dzi",
@@ -788,40 +821,6 @@
       22.214330176924936,
       114.22405314850182,
       22.351669823075067
-    ],
-    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only.",
-    "provisional": true
-  },
-  "central.dzi": {
-    "schemaVersion": 1,
-    "dzi": "central.dzi",
-    "image": {
-      "width": 3072,
-      "height": 3072
-    },
-    "tile": {
-      "size": 256,
-      "overlap": 1,
-      "format": "png"
-    },
-    "center": {
-      "lat": 22.285,
-      "lon": 114.158
-    },
-    "projection": {
-      "type": "orthographic-dimetric",
-      "azimuthDeg": -15.0,
-      "elevationDeg": -26.565,
-      "viewHeightMeters": 2400.0,
-      "targetHeightMeters": 5.0,
-      "metersPerDegLat": 111320.0
-    },
-    "bboxOrder": "[w,s,e,n]",
-    "bbox": [
-      114.1400048600503,
-      22.25892707101307,
-      114.1759951399497,
-      22.31107292898693
     ],
     "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only.",
     "provisional": true

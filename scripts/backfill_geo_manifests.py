@@ -10,12 +10,15 @@ same-origin — no per-file R2 round-trips.
 HD districts are EXACT: every one baked `--viewmap "<lat,lon>,8,6,1500"` → an
 8192×6144 image at azimuth -15°, elevation -26.565° (central_render_bake defaults).
 
-Overview maps (territory / central / hk-island-strip) were baked ad-hoc and their
-center+view_height were never recorded. They are emitted as `provisional` with
-best-estimate params — good enough for overview-zoom actor placement (a few hundred
-metres of error is sub-pixel there), to be tightened by a targeted re-bake (which
-will auto-emit an exact manifest) or a landmark fit. Precision needs scale with
-zoom; the districts, where you see individual streets, are exact.
+Overview maps: `territory` and `central` are EXACT (params recovered from the bake
+commands — territory from its rebake, central from the documented `--viewmap
+"22.2815,114.160,3,3,1200"` in viewer/README.md). `hk-island-strip` alone stays
+`provisional`: its 6×4 scale-test bake params were never recorded, the tile output
+was cleaned up, and the surviving downscaled sample is too stylised to landmark-fit
+reliably — so rather than fabricate false precision it keeps a best-estimate flagged
+provisional, to be made exact by a re-bake (make_dzi --geo-meta auto-emits the
+manifest). Precision needs scale with zoom; the districts, where you see individual
+streets, are exact.
 """
 from __future__ import annotations
 
@@ -61,8 +64,11 @@ OVERVIEW = {
     # territory RE-BAKED to cover the whole HK Island east (Chai Wan/Shek O/Cape
     # D'Aguilar) + the west airport area — EXACT params (validated), not provisional.
     "territory": {"image": (32768, 12288), "center": (22.335, 114.065), "vh": 18400.0, "provisional": False},
+    # central: EXACT — bake was `--viewmap "22.2815,114.160,3,3,1200"` (viewer/README.md);
+    # centre = map centre, vh = full-image view-plane height → 3072×3072 @ vh 1200.
+    "central": {"image": (3072, 3072), "center": (22.2815, 114.160), "vh": 1200.0, "provisional": False},
+    # hk-island-strip: PROVISIONAL — 6×4 scale-test params unrecorded (see module docstring).
     "hk-island-strip": {"image": (6144, 4096), "center": (22.283, 114.165), "vh": 6000.0},
-    "central": {"image": (3072, 3072), "center": (22.285, 114.158), "vh": 2400.0},
 }
 
 

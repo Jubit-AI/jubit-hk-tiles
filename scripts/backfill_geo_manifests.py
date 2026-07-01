@@ -67,8 +67,11 @@ OVERVIEW = {
     # central: EXACT — bake was `--viewmap "22.2815,114.160,3,3,1200"` (viewer/README.md);
     # centre = map centre, vh = full-image view-plane height → 3072×3072 @ vh 1200.
     "central": {"image": (3072, 3072), "center": (22.2815, 114.160), "vh": 1200.0, "provisional": False},
-    # hk-island-strip: PROVISIONAL — 6×4 scale-test params unrecorded (see module docstring).
-    "hk-island-strip": {"image": (6144, 4096), "center": (22.283, 114.165), "vh": 6000.0},
+    # hk-island-strip: LANDMARK-FITTED (its 6×4 bake params were never recorded). Center+vh
+    # solved from IFC + Central Pier 7 pixels measured on the tile (the old provisional vh
+    # 6000 was ~3× too large → everything compressed). Approximate (~80px rms) but aligned;
+    # a re-bake would make it exact (blocked on the HK Lands API key).
+    "hk-island-strip": {"image": (6144, 4096), "center": (22.2820, 114.1720), "vh": 2250.0},
 }
 
 

@@ -1,0 +1,750 @@
+{
+  "AEL": {
+    "stations": [
+      {
+        "code": "AWE",
+        "name": "AsiaWorld-Expo",
+        "lat": 22.32199,
+        "lon": 113.94222
+      },
+      {
+        "code": "AIR",
+        "name": "Airport",
+        "lat": 22.31578,
+        "lon": 113.93639
+      },
+      {
+        "code": "TSY",
+        "name": "Tsing Yi",
+        "lat": 22.3585,
+        "lon": 114.10675
+      },
+      {
+        "code": "KOW",
+        "name": "Kowloon",
+        "lat": 22.30493,
+        "lon": 114.1616
+      },
+      {
+        "code": "HOK",
+        "name": "Hong Kong",
+        "lat": 22.28495,
+        "lon": 114.15818
+      }
+    ]
+  },
+  "TCL": {
+    "stations": [
+      {
+        "code": "TUC",
+        "name": "Tung Chung",
+        "lat": 22.28924,
+        "lon": 113.94137
+      },
+      {
+        "code": "SUN",
+        "name": "Sunny Bay",
+        "lat": 22.33198,
+        "lon": 114.02891
+      },
+      {
+        "code": "TSY",
+        "name": "Tsing Yi",
+        "lat": 22.3585,
+        "lon": 114.10675
+      },
+      {
+        "code": "LAK",
+        "name": "Lai King",
+        "lat": 22.34838,
+        "lon": 114.12631
+      },
+      {
+        "code": "NAC",
+        "name": "Nam Cheong",
+        "lat": 22.32636,
+        "lon": 114.15358
+      },
+      {
+        "code": "OLY",
+        "name": "Olympic",
+        "lat": 22.3178,
+        "lon": 114.16026
+      },
+      {
+        "code": "KOW",
+        "name": "Kowloon",
+        "lat": 22.30493,
+        "lon": 114.1616
+      },
+      {
+        "code": "HOK",
+        "name": "Hong Kong",
+        "lat": 22.28495,
+        "lon": 114.15818
+      }
+    ]
+  },
+  "TML": {
+    "stations": [
+      {
+        "code": "TUM",
+        "name": "Tuen Mun",
+        "lat": 22.39382,
+        "lon": 113.97311
+      },
+      {
+        "code": "SIH",
+        "name": "Siu Hong",
+        "lat": 22.41201,
+        "lon": 113.97827
+      },
+      {
+        "code": "TIS",
+        "name": "Tin Shui Wai",
+        "lat": 22.4494,
+        "lon": 114.00604
+      },
+      {
+        "code": "LOP",
+        "name": "Long Ping",
+        "lat": 22.44771,
+        "lon": 114.02556
+      },
+      {
+        "code": "YUL",
+        "name": "Yuen Long",
+        "lat": 22.44565,
+        "lon": 114.03464
+      },
+      {
+        "code": "KSR",
+        "name": "Kam Sheung Road",
+        "lat": 22.4346,
+        "lon": 114.0639
+      },
+      {
+        "code": "TWW",
+        "name": "Tsuen Wan West",
+        "lat": 22.36849,
+        "lon": 114.11122
+      },
+      {
+        "code": "MEF",
+        "name": "Mei Foo",
+        "lat": 22.33889,
+        "lon": 114.13656
+      },
+      {
+        "code": "NAC",
+        "name": "Nam Cheong",
+        "lat": 22.32636,
+        "lon": 114.15358
+      },
+      {
+        "code": "AUS",
+        "name": "Austin",
+        "lat": 22.30424,
+        "lon": 114.1666
+      },
+      {
+        "code": "ETS",
+        "name": "East Tsim Sha Tsui",
+        "lat": 22.29556,
+        "lon": 114.17507
+      },
+      {
+        "code": "HUH",
+        "name": "Hung Hom",
+        "lat": 22.3029,
+        "lon": 114.18225
+      },
+      {
+        "code": "HOM",
+        "name": "Ho Man Tin",
+        "lat": 22.30965,
+        "lon": 114.18271
+      },
+      {
+        "code": "TKW",
+        "name": "To Kwa Wan",
+        "lat": 22.31697,
+        "lon": 114.18765
+      },
+      {
+        "code": "SUW",
+        "name": "Sung Wong Toi",
+        "lat": 22.32806,
+        "lon": 114.19077
+      },
+      {
+        "code": "KAT",
+        "name": "Kai Tak",
+        "lat": 22.33036,
+        "lon": 114.19935
+      },
+      {
+        "code": "DIH",
+        "name": "Diamond Hill",
+        "lat": 22.33977,
+        "lon": 114.20182
+      },
+      {
+        "code": "HIK",
+        "name": "Hin Keng",
+        "lat": 22.3642,
+        "lon": 114.17061
+      },
+      {
+        "code": "TAW",
+        "name": "Tai Wai",
+        "lat": 22.37272,
+        "lon": 114.17851
+      },
+      {
+        "code": "CKT",
+        "name": "Che Kung Temple",
+        "lat": 22.37471,
+        "lon": 114.18604
+      },
+      {
+        "code": "STW",
+        "name": "Sha Tin Wai",
+        "lat": 22.3768,
+        "lon": 114.19468
+      },
+      {
+        "code": "CIO",
+        "name": "City One",
+        "lat": 22.38299,
+        "lon": 114.20313
+      },
+      {
+        "code": "SHM",
+        "name": "Shek Mun",
+        "lat": 22.38774,
+        "lon": 114.20845
+      },
+      {
+        "code": "TSH",
+        "name": "Tai Shui Hang",
+        "lat": 22.40853,
+        "lon": 114.22224
+      },
+      {
+        "code": "HEO",
+        "name": "Heng On",
+        "lat": 22.41763,
+        "lon": 114.22572
+      },
+      {
+        "code": "MOS",
+        "name": "Ma On Shan",
+        "lat": 22.42479,
+        "lon": 114.23179
+      },
+      {
+        "code": "WKS",
+        "name": "Wu Kai Sha",
+        "lat": 22.42911,
+        "lon": 114.24399
+      }
+    ]
+  },
+  "TKL": {
+    "stations": [
+      {
+        "code": "POA",
+        "name": "Po Lam",
+        "lat": 22.32261,
+        "lon": 114.25774
+      },
+      {
+        "code": "HAH",
+        "name": "Hang Hau",
+        "lat": 22.31557,
+        "lon": 114.26444
+      },
+      {
+        "code": "TKO",
+        "name": "Tseung Kwan O",
+        "lat": 22.30742,
+        "lon": 114.25999
+      },
+      {
+        "code": "TIK",
+        "name": "Tiu Keng Leng",
+        "lat": 22.30408,
+        "lon": 114.25237
+      },
+      {
+        "code": "YAT",
+        "name": "Yau Tong",
+        "lat": 22.29779,
+        "lon": 114.23716
+      },
+      {
+        "code": "QUB",
+        "name": "Quarry Bay",
+        "lat": 22.2879,
+        "lon": 114.2097
+      },
+      {
+        "code": "NOP",
+        "name": "North Point",
+        "lat": 22.29127,
+        "lon": 114.2004
+      }
+    ]
+  },
+  "EAL": {
+    "stations": [
+      {
+        "code": "LOW",
+        "name": "Lo Wu",
+        "lat": 22.52818,
+        "lon": 114.11334
+      },
+      {
+        "code": "SHS",
+        "name": "Sheung Shui",
+        "lat": 22.50116,
+        "lon": 114.12803
+      },
+      {
+        "code": "FAN",
+        "name": "Fanling",
+        "lat": 22.49207,
+        "lon": 114.13856
+      },
+      {
+        "code": "TWO",
+        "name": "Tai Wo",
+        "lat": 22.45108,
+        "lon": 114.16106
+      },
+      {
+        "code": "TAP",
+        "name": "Tai Po Market",
+        "lat": 22.44465,
+        "lon": 114.17063
+      },
+      {
+        "code": "UNI",
+        "name": "University",
+        "lat": 22.41357,
+        "lon": 114.2101
+      },
+      {
+        "code": "FOT",
+        "name": "Fo Tan",
+        "lat": 22.39514,
+        "lon": 114.19846
+      },
+      {
+        "code": "SHT",
+        "name": "Sha Tin",
+        "lat": 22.38191,
+        "lon": 114.1872
+      },
+      {
+        "code": "TAW",
+        "name": "Tai Wai",
+        "lat": 22.37272,
+        "lon": 114.17851
+      },
+      {
+        "code": "KOT",
+        "name": "Kowloon Tong",
+        "lat": 22.337,
+        "lon": 114.17586
+      },
+      {
+        "code": "MKK",
+        "name": "Mong Kok East",
+        "lat": 22.3176,
+        "lon": 114.1725
+      },
+      {
+        "code": "HUH",
+        "name": "Hung Hom",
+        "lat": 22.3029,
+        "lon": 114.18225
+      },
+      {
+        "code": "EXC",
+        "name": "Exhibition Centre",
+        "lat": 22.28161,
+        "lon": 114.17569
+      },
+      {
+        "code": "ADM",
+        "name": "Admiralty",
+        "lat": 22.2794,
+        "lon": 114.1653
+      }
+    ]
+  },
+  "TWL": {
+    "stations": [
+      {
+        "code": "TSW",
+        "name": "Tsuen Wan",
+        "lat": 22.37374,
+        "lon": 114.11764
+      },
+      {
+        "code": "TWH",
+        "name": "Tai Wo Hau",
+        "lat": 22.37083,
+        "lon": 114.125
+      },
+      {
+        "code": "KWH",
+        "name": "Kwai Hing",
+        "lat": 22.3632,
+        "lon": 114.13123
+      },
+      {
+        "code": "KWF",
+        "name": "Kwai Fong",
+        "lat": 22.35696,
+        "lon": 114.12797
+      },
+      {
+        "code": "LAK",
+        "name": "Lai King",
+        "lat": 22.34838,
+        "lon": 114.12631
+      },
+      {
+        "code": "MEF",
+        "name": "Mei Foo",
+        "lat": 22.33889,
+        "lon": 114.13656
+      },
+      {
+        "code": "LCK",
+        "name": "Lai Chi Kok",
+        "lat": 22.3374,
+        "lon": 114.14841
+      },
+      {
+        "code": "CSW",
+        "name": "Cheung Sha Wan",
+        "lat": 22.33551,
+        "lon": 114.15616
+      },
+      {
+        "code": "SSP",
+        "name": "Sham Shui Po",
+        "lat": 22.3307,
+        "lon": 114.16234
+      },
+      {
+        "code": "PRE",
+        "name": "Prince Edward",
+        "lat": 22.32445,
+        "lon": 114.1683
+      },
+      {
+        "code": "MOK",
+        "name": "Mong Kok",
+        "lat": 22.31921,
+        "lon": 114.16924
+      },
+      {
+        "code": "YMT",
+        "name": "Yau Ma Tei",
+        "lat": 22.31315,
+        "lon": 114.1707
+      },
+      {
+        "code": "JOR",
+        "name": "Jordan",
+        "lat": 22.30478,
+        "lon": 114.17163
+      },
+      {
+        "code": "TST",
+        "name": "Tsim Sha Tsui",
+        "lat": 22.29718,
+        "lon": 114.1722
+      },
+      {
+        "code": "ADM",
+        "name": "Admiralty",
+        "lat": 22.2794,
+        "lon": 114.1653
+      },
+      {
+        "code": "CEN",
+        "name": "Central",
+        "lat": 22.2819,
+        "lon": 114.1582
+      }
+    ]
+  },
+  "ISL": {
+    "stations": [
+      {
+        "code": "KET",
+        "name": "Kennedy Town",
+        "lat": 22.2814,
+        "lon": 114.1289
+      },
+      {
+        "code": "HKU",
+        "name": "HKU",
+        "lat": 22.2839,
+        "lon": 114.135
+      },
+      {
+        "code": "SYP",
+        "name": "Sai Ying Pun",
+        "lat": 22.2856,
+        "lon": 114.1428
+      },
+      {
+        "code": "SHW",
+        "name": "Sheung Wan",
+        "lat": 22.2866,
+        "lon": 114.152
+      },
+      {
+        "code": "CEN",
+        "name": "Central",
+        "lat": 22.2819,
+        "lon": 114.1582
+      },
+      {
+        "code": "ADM",
+        "name": "Admiralty",
+        "lat": 22.2794,
+        "lon": 114.1653
+      },
+      {
+        "code": "WAC",
+        "name": "Wan Chai",
+        "lat": 22.2775,
+        "lon": 114.1732
+      },
+      {
+        "code": "CAB",
+        "name": "Causeway Bay",
+        "lat": 22.2803,
+        "lon": 114.1848
+      },
+      {
+        "code": "TIH",
+        "name": "Tin Hau",
+        "lat": 22.2827,
+        "lon": 114.1918
+      },
+      {
+        "code": "FOH",
+        "name": "Fortress Hill",
+        "lat": 22.2882,
+        "lon": 114.1937
+      },
+      {
+        "code": "NOP",
+        "name": "North Point",
+        "lat": 22.29127,
+        "lon": 114.2004
+      },
+      {
+        "code": "QUB",
+        "name": "Quarry Bay",
+        "lat": 22.2879,
+        "lon": 114.2097
+      },
+      {
+        "code": "TAK",
+        "name": "Tai Koo",
+        "lat": 22.2845,
+        "lon": 114.2166
+      },
+      {
+        "code": "SWH",
+        "name": "Sai Wan Ho",
+        "lat": 22.2817,
+        "lon": 114.2221
+      },
+      {
+        "code": "SKW",
+        "name": "Shau Kei Wan",
+        "lat": 22.2791,
+        "lon": 114.2287
+      },
+      {
+        "code": "HFC",
+        "name": "Heng Fa Chuen",
+        "lat": 22.2769,
+        "lon": 114.24
+      },
+      {
+        "code": "CHW",
+        "name": "Chai Wan",
+        "lat": 22.2647,
+        "lon": 114.2371
+      }
+    ]
+  },
+  "KTL": {
+    "stations": [
+      {
+        "code": "WHA",
+        "name": "Whampoa",
+        "lat": 22.30512,
+        "lon": 114.18986
+      },
+      {
+        "code": "HOM",
+        "name": "Ho Man Tin",
+        "lat": 22.30965,
+        "lon": 114.18271
+      },
+      {
+        "code": "YMT",
+        "name": "Yau Ma Tei",
+        "lat": 22.31315,
+        "lon": 114.1707
+      },
+      {
+        "code": "MOK",
+        "name": "Mong Kok",
+        "lat": 22.31921,
+        "lon": 114.16924
+      },
+      {
+        "code": "PRE",
+        "name": "Prince Edward",
+        "lat": 22.32445,
+        "lon": 114.1683
+      },
+      {
+        "code": "SKM",
+        "name": "Shek Kip Mei",
+        "lat": 22.33244,
+        "lon": 114.1685
+      },
+      {
+        "code": "KOT",
+        "name": "Kowloon Tong",
+        "lat": 22.337,
+        "lon": 114.17586
+      },
+      {
+        "code": "LOF",
+        "name": "Lok Fu",
+        "lat": 22.33802,
+        "lon": 114.18723
+      },
+      {
+        "code": "WTS",
+        "name": "Wong Tai Sin",
+        "lat": 22.3416,
+        "lon": 114.19365
+      },
+      {
+        "code": "DIH",
+        "name": "Diamond Hill",
+        "lat": 22.33977,
+        "lon": 114.20182
+      },
+      {
+        "code": "CHH",
+        "name": "Choi Hung",
+        "lat": 22.33488,
+        "lon": 114.20894
+      },
+      {
+        "code": "KOB",
+        "name": "Kowloon Bay",
+        "lat": 22.32328,
+        "lon": 114.21418
+      },
+      {
+        "code": "NTK",
+        "name": "Ngau Tau Kok",
+        "lat": 22.31538,
+        "lon": 114.21902
+      },
+      {
+        "code": "KWT",
+        "name": "Kwun Tong",
+        "lat": 22.31278,
+        "lon": 114.22629
+      },
+      {
+        "code": "LAT",
+        "name": "Lam Tin",
+        "lat": 22.30671,
+        "lon": 114.23278
+      },
+      {
+        "code": "YAT",
+        "name": "Yau Tong",
+        "lat": 22.29779,
+        "lon": 114.23716
+      },
+      {
+        "code": "TIK",
+        "name": "Tiu Keng Leng",
+        "lat": 22.30408,
+        "lon": 114.25237
+      }
+    ]
+  },
+  "SIL": {
+    "stations": [
+      {
+        "code": "ADM",
+        "name": "Admiralty",
+        "lat": 22.2794,
+        "lon": 114.1653
+      },
+      {
+        "code": "OCP",
+        "name": "Ocean Park",
+        "lat": 22.24862,
+        "lon": 114.17475
+      },
+      {
+        "code": "WCH",
+        "name": "Wong Chuk Hang",
+        "lat": 22.24786,
+        "lon": 114.16751
+      },
+      {
+        "code": "LET",
+        "name": "Lei Tung",
+        "lat": 22.24239,
+        "lon": 114.1557
+      },
+      {
+        "code": "SOH",
+        "name": "South Horizons",
+        "lat": 22.2428,
+        "lon": 114.14894
+      }
+    ]
+  },
+  "DRL": {
+    "stations": [
+      {
+        "code": "SUN",
+        "name": "Sunny Bay",
+        "lat": 22.33198,
+        "lon": 114.02891
+      },
+      {
+        "code": "DIS",
+        "name": "Disneyland Resort",
+        "lat": 22.31501,
+        "lon": 114.04525
+      }
+    ]
+  }
+}

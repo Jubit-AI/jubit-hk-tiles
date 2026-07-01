@@ -58,7 +58,9 @@ VH_OVERRIDE = {"hk-airport": 3300.0}  # enlarged to fit the whole ~4km HKIA
 # Overview maps — PROVISIONAL params (see module docstring). image sizes are the
 # real baked DZI dimensions; center/view_height are best-estimates pending a fit.
 OVERVIEW = {
-    "territory": {"image": (24576, 20480), "center": (22.340, 114.140), "vh": 48000.0},
+    # territory RE-BAKED to cover the whole HK Island east (Chai Wan/Shek O/Cape
+    # D'Aguilar) + the west airport area — EXACT params (validated), not provisional.
+    "territory": {"image": (19200, 7200), "center": (22.335, 114.065), "vh": 18400.0, "provisional": False},
     "hk-island-strip": {"image": (6144, 4096), "center": (22.283, 114.165), "vh": 6000.0},
     "central": {"image": (3072, 3072), "center": (22.285, 114.158), "vh": 2400.0},
 }
@@ -86,7 +88,8 @@ def main() -> int:
             center_lat=cfg["center"][0], center_lon=cfg["center"][1],
             view_height_meters=cfg["vh"],
         )
-        m["provisional"] = True  # center/view_height are estimates — see backfill docstring
+        if cfg.get("provisional", True):  # some overviews are still best-estimates
+            m["provisional"] = True
         (viewer / f"{name}.geo.json").write_text(json.dumps(m, indent=2))
         manifests[dzi] = m
 

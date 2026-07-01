@@ -729,8 +729,8 @@
     "schemaVersion": 1,
     "dzi": "territory.dzi",
     "image": {
-      "width": 24576,
-      "height": 20480
+      "width": 19200,
+      "height": 7200
     },
     "tile": {
       "size": 256,
@@ -738,26 +738,25 @@
       "format": "png"
     },
     "center": {
-      "lat": 22.34,
-      "lon": 114.14
+      "lat": 22.335,
+      "lon": 114.065
     },
     "projection": {
       "type": "orthographic-dimetric",
       "azimuthDeg": -15.0,
       "elevationDeg": -26.565,
-      "viewHeightMeters": 48000.0,
+      "viewHeightMeters": 18400.0,
       "targetHeightMeters": 5.0,
       "metersPerDegLat": 111320.0
     },
     "bboxOrder": "[w,s,e,n]",
     "bbox": [
-      113.73492599830391,
-      21.807381418316627,
-      114.5450740016961,
-      22.872618581683373
+      113.78314910877248,
+      22.09945753822107,
+      114.34685089122752,
+      22.57054246177893
     ],
-    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only.",
-    "provisional": true
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
   },
   "hk-island-strip.dzi": {
     "schemaVersion": 1,

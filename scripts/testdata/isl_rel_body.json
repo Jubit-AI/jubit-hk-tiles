@@ -1,0 +1,480 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-07-01T16:45:15Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "relation",
+  "id": 4432665,
+  "members": [
+    {
+      "type": "node",
+      "ref": 253288867,
+      "role": "stop_entry_only"
+    },
+    {
+      "type": "node",
+      "ref": 253288859,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 984409448,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 253288849,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 278943742,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 984741558,
+      "role": "stop"
+    },
+    {
+      "type": "way",
+      "ref": 253921168,
+      "role": "platform"
+    },
+    {
+      "type": "node",
+      "ref": 253288836,
+      "role": "stop"
+    },
+    {
+      "type": "way",
+      "ref": 254296955,
+      "role": "platform"
+    },
+    {
+      "type": "node",
+      "ref": 2564639695,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 3303947368,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544830,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544993,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545111,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544875,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2561063241,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2561063247,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 515673758,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 515677041,
+      "role": "stop_exit_only"
+    },
+    {
+      "type": "way",
+      "ref": 26322267,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286821,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 319179060,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286825,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286820,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286817,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 321035041,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 249921542,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 1498685775,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250105340,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250105341,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 249935583,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 249935588,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 254462656,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 249921544,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 254468279,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 254468276,
+      "role": ""
+    }
+  ],
+  "tags": {
+    "brand": "港鐵 MTR",
+    "brand:en": "MTR",
+    "brand:zh": "港鐵",
+    "colour": "#007dc5",
+    "description": "MTR Island Line (Down/Westbound)",
+    "description:en": "MTR Island Line (Down/Westbound)",
+    "description:zh": "港鐵港島綫 (下/西行)",
+    "direction:official_ref": "下行 Down",
+    "direction:official_ref:en": "Down",
+    "direction:official_ref:zh": "下行",
+    "direction:ref": "西行 Westbound",
+    "direction:ref:en": "Westbound",
+    "direction:ref:zh": "西行",
+    "from": "柴灣 Chai Wan",
+    "from:en": "Chai Wan",
+    "from:ref": "CHW",
+    "from:zh": "柴灣",
+    "name": "港鐵港島綫 MTR Island Line",
+    "name:en": "MTR Island Line",
+    "name:zh": "港鐵港島綫",
+    "network": "港鐵 MTR",
+    "network:en": "MTR",
+    "network:wikidata": "Q14751",
+    "network:zh": "港鐵",
+    "network:zh-Hans": "港铁",
+    "network:zh-Hant": "港鐵",
+    "operator": "香港鐵路有限公司 MTR Corporation",
+    "operator:en": "MTR Corporation",
+    "operator:wikidata": "Q1479375",
+    "operator:zh": "香港鐵路有限公司",
+    "operator:zh-Hans": "香港铁路有限公司",
+    "operator:zh-Hant": "香港鐵路有限公司",
+    "owner": "香港鐵路有限公司 MTR Corporation Limited",
+    "owner:en": "MTR Corporation Limited",
+    "owner:wikidata": "Q1479375",
+    "owner:zh": "香港鐵路有限公司",
+    "passenger": "urban",
+    "public_transport:version": "2",
+    "ref": "ISL",
+    "route": "subway",
+    "to": "堅尼地城 Kennedy Town",
+    "to:en": "Kennedy Town",
+    "to:ref": "KET",
+    "to:zh": "堅尼地城",
+    "type": "route",
+    "wikidata": "Q989316"
+  }
+},
+{
+  "type": "relation",
+  "id": 4432666,
+  "members": [
+    {
+      "type": "node",
+      "ref": 2569844151,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2569844130,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2569844158,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545163,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545056,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545101,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545153,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 4275578360,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545093,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564545127,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544838,
+      "role": "stop"
+    },
+    {
+      "type": "way",
+      "ref": 254296956,
+      "role": "platform"
+    },
+    {
+      "type": "node",
+      "ref": 2564545121,
+      "role": "stop"
+    },
+    {
+      "type": "way",
+      "ref": 253921169,
+      "role": "platform"
+    },
+    {
+      "type": "node",
+      "ref": 2564544949,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544862,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2564544849,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2567717556,
+      "role": "stop"
+    },
+    {
+      "type": "node",
+      "ref": 2567717542,
+      "role": "stop"
+    },
+    {
+      "type": "way",
+      "ref": 254468276,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 254471224,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 33872172,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 414787999,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 319353141,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 414803635,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 254462651,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 545322990,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 1498685773,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 1498685774,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250558100,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250120268,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 26322258,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 321035040,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286818,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 319179057,
+      "role": ""
+    },
+    {
+      "type": "way",
+      "ref": 250286828,
+      "role": ""
+    }
+  ],
+  "tags": {
+    "brand": "港鐵 MTR",
+    "brand:en": "MTR",
+    "brand:zh": "港鐵",
+    "colour": "#007dc5",
+    "description": "MTR Island Line (Up/Eastbound)",
+    "description:en": "MTR Island Line (Up/Eastbound)",
+    "description:zh": "港鐵港島綫 (上/東行)",
+    "direction:official_ref": "上行 Up",
+    "direction:official_ref:en": "Up",
+    "direction:official_ref:zh": "上行",
+    "direction:ref": "東行 Eastbound",
+    "direction:ref:en": "Eastbound",
+    "direction:ref:zh": "東行",
+    "from": "堅尼地城 Kennedy Town",
+    "from:en": "Kennedy Town",
+    "from:ref": "KET",
+    "from:zh": "堅尼地城",
+    "name": "港鐵港島綫 MTR Island Line",
+    "name:en": "MTR Island Line",
+    "name:zh": "港鐵港島綫",
+    "network": "港鐵 MTR",
+    "network:en": "MTR",
+    "network:wikidata": "Q14751",
+    "network:zh": "港鐵",
+    "network:zh-Hans": "港铁",
+    "network:zh-Hant": "港鐵",
+    "operator": "香港鐵路有限公司 MTR Corporation",
+    "operator:en": "MTR Corporation",
+    "operator:wikidata": "Q1479375",
+    "operator:zh": "香港鐵路有限公司",
+    "operator:zh-Hans": "香港铁路有限公司",
+    "operator:zh-Hant": "香港鐵路有限公司",
+    "owner": "香港鐵路有限公司 MTR Corporation Limited",
+    "owner:en": "MTR Corporation Limited",
+    "owner:wikidata": "Q1479375",
+    "owner:zh": "香港鐵路有限公司",
+    "passenger": "urban",
+    "public_transport:version": "2",
+    "ref": "ISL",
+    "route": "subway",
+    "to": "柴灣 Chai Wan",
+    "to:en": "Chai Wan",
+    "to:ref": "CHW",
+    "to:zh": "柴灣",
+    "type": "route",
+    "wikidata": "Q989316"
+  }
+}
+
+  ]
+}

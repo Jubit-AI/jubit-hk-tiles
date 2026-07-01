@@ -116,25 +116,31 @@ def test_azimuth_rotates_the_ground_plane():
     assert px_n != pytest.approx(cx, abs=1.0)  # rotated off the centre column
 
 
-def test_azimuth_sign_pinned_by_landmark_bearing():
-    # Rigorously pin AZIMUTH_SIGN against a known-bearing landmark pair on the exact
-    # central-hd manifest: the Central Star Ferry pier → the TST Star Ferry pier (true
-    # compass bearing ≈ 52° NE). Under the validated rig (AZIMUTH_SIGN=+1) this projects
-    # to a screen bearing of ≈ 59° measured clockwise from screen-up; flipping the sign
-    # would swing it to ≈ 79°. A ±8° window admits +1 and excludes -1 — so this test
-    # fails loudly if anyone flips the heading convention.
+def test_projection_matches_the_bake_camera():
+    # GOLDEN test against ground truth: these pixels were computed by the ACTUAL bake camera
+    # (3d-tiles-renderer WGS84_ELLIPSOID.getObjectFrame(...,CAMERA_FRAME) + the orthographic
+    # frustum, run against the real library) for the exact central-hd manifest. project()
+    # MUST reproduce them — this is what pins AZIMUTH_SIGN=-1 (a +1 is off by up to ~2500 px
+    # and shifts every actor off the tiles). If a bake param or the projection changes, this
+    # fails loudly instead of silently drifting off the map.
     m = gt.build_manifest(
         dzi="central-hd.dzi", image_width=8192, image_height=6144,
-        center_lat=22.29, center_lon=114.164, view_height_meters=1500,
+        center_lat=22.290, center_lon=114.164, view_height_meters=1500,
         azimuth_deg=-15.0, elevation_deg=-26.565,
     )
-    central_star_ferry = (22.28955, 114.16175)
-    tst_star_ferry = (22.2945, 114.1685)
-    ax, ay = gt.project(m, *central_star_ferry)
-    bx, by = gt.project(m, *tst_star_ferry)
-    screen_bearing = math.degrees(math.atan2(bx - ax, -(by - ay)))  # cw from screen-up
-    assert screen_bearing == pytest.approx(59.0, abs=8.0)
-    assert gt.AZIMUTH_SIGN == 1.0  # the value the bearing above was validated against
+    golden = {  # (lat, lon): (px, py) from the real getObjectFrame + ortho camera, h=5
+        (22.290, 114.164): (4096, 3072),      # centre → image centre
+        (22.2819, 114.1582): (780, 4376),     # Central station
+        (22.2794, 114.1653): (3382, 5213),    # Admiralty
+        (22.28525, 114.15877): (1406, 3747),  # IFC
+        (22.286943, 114.161145): (2573, 3532),  # Star Ferry Pier 7
+        (22.2866, 114.152): (-1196, 3152),    # Sheung Wan
+    }
+    assert gt.AZIMUTH_SIGN == -1.0
+    for (lat, lon), (gx, gy) in golden.items():
+        px, py = gt.project(m, lat, lon)
+        assert px == pytest.approx(gx, abs=2) and py == pytest.approx(gy, abs=2), \
+            f"({lat},{lon}) → ({px:.0f},{py:.0f}) but bake says ({gx},{gy})"
 
 
 def test_ellipsoid_terms_are_active_at_range():

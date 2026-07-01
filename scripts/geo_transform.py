@@ -52,9 +52,13 @@ DEFAULT_AZIMUTH_DEG = -15.0
 DEFAULT_ELEVATION_DEG = -26.565
 DEFAULT_TARGET_HEIGHT_M = 5.0
 
-# Empirically-pinned heading sign (see module docstring). +1 rotates the ground
-# plane by -azimuth into screen axes; flip to -1 if landmark validation says so.
-AZIMUTH_SIGN = 1.0
+# Heading sign, CALIBRATED against the bake's real camera (web_render getObjectFrame +
+# CAMERA_FRAME ortho): the bake's screen-right axis is cos(az)·E − sin(az)·N, i.e. a
+# rotation by +az of the ENU east/north — which this code reproduces with sign = −1
+# (`a = radians(az)·SIGN`). Verified project() == the library-computed bake pixel to 0 px
+# on central-hd landmarks (Central, Admiralty, IFC, Star Ferry, Sheung Wan). A +1 here
+# rotates+reflects the placement (up to ~2500 px off at district scale) — do NOT use +1.
+AZIMUTH_SIGN = -1.0
 
 # WGS84 ellipsoid — the exact figure the bake places tiles on (3d-tiles-renderer's
 # WGS84_ELLIPSOID). We project on this same ellipsoid so actors don't drift from the

@@ -157,6 +157,15 @@ def start_server() -> subprocess.Popen:
     )
 
 
+def _tile_std(path) -> float:
+    """Mean per-channel pixel std of a saved tile. A silent f2 render-failure is a
+    flat fill (std ~0.8); real textured content is std > 8. Drives retry + fail-loud."""
+    import numpy as np
+    from PIL import Image
+    a = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
+    return float(a.reshape(-1, 3).std(0).mean())
+
+
 def render_tile(browser, tile, args, az, el, out_dir) -> bool:
     """Render one tile in a fresh context. Returns True if it FAILED (whitebox/
     init failure). Shared by the sequential and concurrent paths so the proven
@@ -169,6 +178,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         "azimuth": az, "elevation": el, "view_height": view_h,
     }
     params.update(extra)  # e.g. setViewOffset tile_col/row/cols/rows
+    if args.layer:
+        params["layer"] = args.layer  # building (default) | infrastructure | visualisation (f2)
     if args.style == "soft":
         params["style"] = "soft"
         if args.pixel is not None:
@@ -179,6 +190,8 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
             params["night"] = "true"
         if args.vector:
             params["vector"] = "true"
+        if args.weather:
+            params["scenario"] = args.weather
     if args.transparent:
         params["transparent"] = "true"
     q = urlencode(params)
@@ -206,33 +219,55 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         page.on("console", _on_console)
         page.on("pageerror", lambda e: print(f"   [pageerror] {str(e)[:160]}"))
         url = f"http://localhost:{PORT}/?{q}"
-        page.goto(url, wait_until="networkidle")
-        try:
-            page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
-            loaded = True
-        except Exception:
-            loaded = False
-            print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
-        # TILES_LOADED fires on geometry load; KTX2 textures transcode after, so
-        # settle before screenshot or we capture untextured (whitebox) buildings.
-        page.wait_for_timeout(args.settle_ms)
-        # Gate on the TRUE signal — the live textured-mesh inventory, NOT the noisy
-        # console (one transient "Couldn't load texture" is harmless when N/N meshes
-        # end up textured). A real whitebox = a large untextured fraction or init fail.
-        inv = page.evaluate("""() => {
-          const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
-          const root = window.__scene;
-          if (!root) { out.noScene = true; return out; }
-          root.traverse(o => {
-            if (!o.isMesh) return;
-            out.total++;
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            if (!mats.some(m => m && m.map)) out.noMap++;
-          });
-          return out;
-        }""")
+        # domcontentloaded (not networkidle): f2 streams tiles continuously and may
+        # never hit networkidle within the default 30s goto timeout. The real
+        # readiness signal is the window.TILES_LOADED gate below (downloading+parsing
+        # idle for ≥1s), which respects --tile-timeout.
         out_path = out_dir / f"{label}.png"
-        page.screenshot(path=str(out_path), omit_background=args.transparent)
+        # The f2 satellite layer occasionally fails to paint before capture, yielding a
+        # flat-fill tile while geometry/textures report success (a SILENT failure). Detect
+        # it (low pixel std) and retry with a longer settle; fail loud if it never paints.
+        FLAT_STD = 6.0
+        max_attempts = 3 if args.layer == "visualisation" else 1
+        loaded = False
+        inv = {}
+        std = 999.0
+        for attempt in range(1, max_attempts + 1):
+            if attempt == 1:
+                page.goto(url, wait_until="domcontentloaded", timeout=args.tile_timeout)
+            else:
+                page.reload(wait_until="domcontentloaded", timeout=args.tile_timeout)
+            try:
+                page.wait_for_function("window.TILES_LOADED === true", timeout=args.tile_timeout)
+                loaded = True
+            except Exception:
+                loaded = False
+                print(f"   ⚠️  {label}: TILES_LOADED timeout, capturing anyway")
+            # TILES_LOADED fires on geometry load; KTX2 textures transcode after, so
+            # settle before screenshot or we capture untextured (whitebox) buildings.
+            # Longer settle on each retry gives the f2 satellite layer more time to paint.
+            page.wait_for_timeout(int(args.settle_ms * (1 + 0.6 * (attempt - 1))))
+            # Gate on the TRUE signal — the live textured-mesh inventory, NOT the noisy
+            # console (one transient "Couldn't load texture" is harmless when N/N meshes
+            # end up textured). A real whitebox = a large untextured fraction or init fail.
+            inv = page.evaluate("""() => {
+              const out = {initFailed: !!window.KTX2_INIT_FAILED, total: 0, noMap: 0};
+              const root = window.__scene;
+              if (!root) { out.noScene = true; return out; }
+              root.traverse(o => {
+                if (!o.isMesh) return;
+                out.total++;
+                const mats = Array.isArray(o.material) ? o.material : [o.material];
+                if (!mats.some(m => m && m.map)) out.noMap++;
+              });
+              return out;
+            }""")
+            page.screenshot(path=str(out_path), omit_background=args.transparent)
+            std = _tile_std(out_path)
+            if args.layer != "visualisation" or std >= FLAT_STD:
+                break
+            if attempt < max_attempts:
+                print(f"   ⟳ {label}: flat f2 (std={std:.1f}), retry {attempt}/{max_attempts - 1} at longer settle")
         size = out_path.stat().st_size
         total = inv.get("total", 0)
         no_map = inv.get("noMap", 0)
@@ -240,6 +275,15 @@ def render_tile(browser, tile, args, az, el, out_dir) -> bool:
         tex_note = f"{total - no_map}/{total} tex"
         if not loaded:
             status, icon = "timeout", "⚠️ "
+        elif args.layer == "visualisation":
+            # f2 renders untextured base-colour geometry BY DESIGN (0/N textures is OK
+            # here). The real failure mode is a flat/unpainted satellite layer — caught
+            # by the pixel-std check (a clean f2 tile is textured, std > FLAT_STD).
+            if std < FLAT_STD:
+                status, icon = f"FLAT-FAIL(std={std:.1f})", "❌"
+                failed = True
+            else:
+                status, icon = f"ok(viz {tex_note} std{std:.0f})", "✅"
         elif inv.get("initFailed") or untex_frac > 0.20:
             status, icon = f"TEXTURE-FAIL({tex_note})", "❌"
             failed = True
@@ -312,6 +356,9 @@ def render_all(tiles, args, az, el, out_dir, launch_args) -> tuple[int, int]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bake HK isometric tiles (grid or named locations)")
     parser.add_argument("--limit", type=int, default=None, help="render only the first N tiles")
+    parser.add_argument("--only", type=str, default=None,
+                        help="comma-separated tile labels (e.g. r2_c7,r3_c8) to bake — for "
+                             "targeted retry of specific failed tiles without re-baking the grid")
     parser.add_argument("--locations", type=Path, default=None,
                         help="render named locations from a JSON file (e.g. scripts/locations.json) "
                              "instead of the Central grid")
@@ -351,9 +398,18 @@ def main() -> int:
     parser.add_argument("--vector", action="store_true",
                         help="soft only: stylized-vector-illustration preset — flatter cel "
                              "fills, hard palette flats, bold clean outline, no grain")
+    parser.add_argument("--weather", choices=["golden", "rain", "typhoon"], default=None,
+                        help="soft only: weather/time scenario (golden-hour / rain / typhoon); "
+                             "day↔night uses --night. Live counterpart of weather_grade.py "
+                             "(the seamless baked-variant path).")
     parser.add_argument("--transparent", action="store_true",
                         help="no sky fill; bake transparent PNGs (game-ready PROP SPRITES). "
                              "Pair with a tight view_height per location to isolate a landmark.")
+    parser.add_argument("--layer", choices=["building", "infrastructure", "visualisation"],
+                        default="building",
+                        help="which HK Lands Dept 3D tileset to bake: building (default, 3dsd "
+                             "buildings only) | infrastructure | visualisation (the f2 map: "
+                             "terrain + waterbody + vegetation + infrastructure + buildings)")
     parser.add_argument("--map", type=str, default=None,
                         help="[superseded by --viewmap] move-camera grid: "
                              "'lat,lon,cols,rows,footprint_m'. Leaves seams; kept for reference.")
@@ -385,6 +441,10 @@ def main() -> int:
     else:
         tiles = list(grid_centers())
         out_dir = REPO / "scripts" / "out" / (args.out_dir or "central")
+    if args.only:
+        want = {s.strip() for s in args.only.split(",") if s.strip()}
+        tiles = [t for t in tiles if t[0] in want]
+        print(f"🎯 --only: baking {len(tiles)} of the requested {len(want)} tiles: {sorted(want)}")
     if args.limit:
         tiles = tiles[: args.limit]
     out_dir.mkdir(parents=True, exist_ok=True)

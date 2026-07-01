@@ -31,6 +31,14 @@
       border-radius: 6px; padding: 6px 10px; cursor: pointer; letter-spacing: 0.2px;
     }
     #maps button.active { background: #C7A25B; }
+    /* Phase B — weather/time scenario switcher (variants of the Territory map). */
+    #scenarios { position: fixed; right: 12px; top: 48px; z-index: 10; display: flex; gap: 6px; }
+    #scenarios button {
+      font: 600 11px/1.2 -apple-system, system-ui, sans-serif; color: #1f1a17;
+      background: rgba(246, 241, 232, 0.92); border: 1px solid #1f1a17;
+      border-radius: 6px; padding: 5px 9px; cursor: pointer; letter-spacing: 0.2px;
+    }
+    #scenarios button.active { background: #C7A25B; }
   </style>
 </head>
 <body>
@@ -39,6 +47,14 @@
     <button data-dzi="central.dzi">Central</button>
     <button data-dzi="hk-island-strip.dzi">HK Island</button>
     <button data-dzi="territory.dzi">Territory</button>
+    <button data-dzi="central-hd.dzi" title="Central + Victoria Harbour at 2× detail">Central HD</button>
+  </div>
+  <div id="scenarios">
+    <button data-dzi="territory.dzi" data-scenario="day">Day</button>
+    <button data-dzi="territory-golden.dzi" data-scenario="golden">Golden</button>
+    <button data-dzi="territory-night.dzi" data-scenario="night">Night</button>
+    <button data-dzi="territory-rain.dzi" data-scenario="rain">Rain</button>
+    <button data-dzi="territory-typhoon.dzi" data-scenario="typhoon">Typhoon</button>
   </div>
   <div id="osd"></div>
   <div id="attribution">
@@ -60,18 +76,46 @@
       navigatorPosition: "BOTTOM_RIGHT",
       backgroundColor: "#F3E7CF",
       minZoomImageRatio: 0.6,
-      maxZoomPixelRatio: 3.0,
+      // Phase C — sharper zoom-in. 3.0 → 5.0 lets the viewer magnify ~5× past
+      // native DZI res before it softens (the 24576×16384 territory bake sets the
+      // crisp ceiling). imageSmoothingEnabled:false keeps the extra zoom crisp,
+      // not blurry. Pair with per-region detail DZIs (hero districts) for true
+      // extra detail beyond this.
+      maxZoomPixelRatio: 5.0,
       gestureSettingsMouse: { clickToZoom: false },
       // pixel-art-friendly: keep edges crisp when zoomed past native res
       imageSmoothingEnabled: false,
     });
     // Map-mode switcher — swap between the baked DZI maps in place.
     const mapBtns = [...document.querySelectorAll("#maps button")];
-    const setActive = (d) => mapBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
+    const scenBtns = [...document.querySelectorAll("#scenarios button")];
+    const setMapActive = (d) => mapBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
+    const setScenActive = (d) => scenBtns.forEach((b) => b.classList.toggle("active", b.dataset.dzi === d));
+    // Weather/time scenarios are variants of the Territory map only — they're
+    // enabled when Territory is the active base, disabled (greyed) otherwise.
+    const territoryActive = (d) => d.startsWith("territory");
+    const syncScenAvail = (d) => scenBtns.forEach((b) => (b.disabled = !territoryActive(d)));
+
     mapBtns.forEach((b) => b.addEventListener("click", () => {
-      viewer.open(b.dataset.dzi); setActive(b.dataset.dzi);
+      const d = b.dataset.dzi;
+      viewer.open(d); setMapActive(d); syncScenAvail(d);
+      setScenActive(territoryActive(d) ? "territory.dzi" : null); // base map = Day
     }));
-    setActive(dzi);
+    scenBtns.forEach((b) => b.addEventListener("click", () => {
+      const d = b.dataset.dzi;
+      viewer.open(d); setScenActive(d); setMapActive("territory.dzi");
+    }));
+
+    // Graceful fallback: a scenario variant DZI may not be generated yet. If an
+    // open fails, drop back to the day Territory map instead of a blank viewer.
+    viewer.addHandler("open-failed", (e) => {
+      console.warn("DZI open failed:", e && e.message, "→ falling back to territory.dzi");
+      if (viewer.tileSources !== "territory.dzi") {
+        viewer.open("territory.dzi"); setMapActive("territory.dzi"); setScenActive("territory.dzi");
+      }
+    });
+
+    setMapActive(dzi); syncScenAvail(dzi); setScenActive(territoryActive(dzi) ? "territory.dzi" : null);
   </script>
 </body>
 </html>

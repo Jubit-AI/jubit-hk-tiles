@@ -34,6 +34,12 @@ const SoftStyliseShader = {
     uPixelSize: { value: 1.0 },     // mosaic block in screen px (1 = off / clean)
     uPaletteMix: { value: 0.85 },   // 0=off, 1=full snap to the 15-colour Yok palette
     uNight: { value: 0.0 },         // 0=day, 1=night re-light (ignite neon accents)
+    uSeaFill: { value: 0.0 },       // f2 visualisation layer: paint empty/sea the day-water tone
+    // Phase B — weather/time scenario (live-render axis, mirrors weather_grade.py):
+    // 0=none/day, 1=golden-hour, 3=rain, 4=typhoon (night = uNight above). The
+    // deployed DZI variants are produced seamlessly by weather_grade.py (absolute
+    // pixel coords); this uniform is the live/single-frame counterpart.
+    uScenario: { value: 0.0 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -45,7 +51,7 @@ const SoftStyliseShader = {
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
     uniform vec2 uResolution;
-    uniform float uCelBands, uWarm, uGrain, uEdge, uPixelSize, uPaletteMix, uNight;
+    uniform float uCelBands, uWarm, uGrain, uEdge, uPixelSize, uPaletteMix, uNight, uSeaFill, uScenario;
     varying vec2 vUv;
 
     float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
@@ -57,17 +63,22 @@ const SoftStyliseShader = {
     // 6-9 are the saturated harbour/cinnabar accents, chroma-gated below so the
     // grey concrete city never mis-snaps to them. (Indices 2-3 are derived warm
     // mids between parchment and ink — not anchor colours — for smooth massing.)
+    // HK Jubuddy Soft Isometric palette (docs/design/game-assets/
+    // hk-jubuddy-isometric-palette-swatches.svg). 0-1 paper terrain, 2 soft-stone +
+    // 3 charcoal give buildings a NEUTRAL tone distinct from parchment terrain (the
+    // wash collapsed everything to parchment before); 5 gold = structure; 6-9 are the
+    // chroma-gated accents incl. peak-green for hills/vegetation + harbour teal water.
     vec3 yok(int i) {
-      if (i==0)  return vec3(0.953,0.906,0.812); // rice paper    F3E7CF
-      if (i==1)  return vec3(0.851,0.773,0.612); // parchment     D9C59C
-      if (i==2)  return vec3(0.639,0.561,0.380); // concrete mid  ~A38F61 (derived)
-      if (i==3)  return vec3(0.369,0.322,0.220); // concrete shdw ~5E5238 (derived)
-      if (i==4)  return vec3(0.102,0.102,0.090); // ink           1A1A17
-      if (i==5)  return vec3(0.780,0.635,0.357); // antique gold  C7A25B
-      if (i==6)  return vec3(0.051,0.239,0.275); // deep harbour  0D3D46 (accent)
-      if (i==7)  return vec3(0.122,0.435,0.451); // harbour teal  1F6F73 (accent)
-      if (i==8)  return vec3(0.180,0.549,0.490); // tram jade     2E8C7D (accent)
-      return            vec3(0.714,0.278,0.204); // cinnabar      B64734 (accent)
+      if (i==0)  return vec3(0.953,0.906,0.812); // rice paper      F3E7CF
+      if (i==1)  return vec3(0.851,0.773,0.612); // warm parchment  D9C59C
+      if (i==2)  return vec3(0.659,0.667,0.627); // soft stone      A8AAA0
+      if (i==3)  return vec3(0.196,0.220,0.231); // wet charcoal    32383B
+      if (i==4)  return vec3(0.102,0.102,0.090); // matte ink       1A1A17
+      if (i==5)  return vec3(0.780,0.635,0.357); // antique gold    C7A25B
+      if (i==6)  return vec3(0.051,0.239,0.275); // deep harbour    0D3D46 (accent)
+      if (i==7)  return vec3(0.122,0.435,0.451); // harbour teal    1F6F73 (accent)
+      if (i==8)  return vec3(0.310,0.478,0.318); // peak green      4F7A51 (accent)
+      return            vec3(0.714,0.278,0.204); // lantern cinnabar B64734 (accent)
     }
 
     // Snap to nearest anchor colour. Accents (6-9: harbour/jade/cinnabar) get a
@@ -91,6 +102,14 @@ const SoftStyliseShader = {
       vec2 puv = (floor(vUv * grid) + 0.5) / grid;
       vec4 src = texture2D(tDiffuse, puv);
       vec3 col = src.rgb;
+
+      // viz (f2 real photo textures): the aerial source is dark + muted — brighten and
+      // saturate it into a vibrant cute cartoon base before the cel/outline passes.
+      if (uSeaFill > 0.5) {
+        col = clamp(pow(clamp(col, 0.0, 1.0), vec3(0.80)) * 1.12, 0.0, 1.0); // gamma-lift + gain
+        float l0 = luma(col);
+        col = clamp(mix(vec3(l0), col, 1.55), 0.0, 1.0);                     // saturation boost
+      }
       float lum = luma(col);
 
       // 1. Cel posterize, lifted into the warm-concrete range (no black crush).
@@ -121,6 +140,17 @@ const SoftStyliseShader = {
       // 5. Snap to the Yok palette (limited-palette = pixel-art + Jubit colours).
       col = mix(col, snapYok(clamp(col, 0.0, 1.0)), uPaletteMix);
 
+      // 5b. f2 sea fill. In the visualisation tileset the sea/harbour carries NO
+      // mesh — those pixels fall through to the renderer's clear colour (sky-blue
+      // 135,206,235). Detect that exact background from the RAW src and paint it a
+      // soft day-harbour tone so the sea reads as water (gated by uSeaFill so the
+      // building-only bakes keep their parchment empties). Faint screen-keyed
+      // ripple so it isn't a dead-flat fill.
+      float bg = 1.0 - smoothstep(0.04, 0.12, distance(src.rgb, vec3(0.529, 0.808, 0.922)));
+      float ripple = 0.97 + 0.03 * hash(floor(vUv * uResolution / 3.0));
+      vec3 seaCol = vec3(0.30, 0.55, 0.56) * ripple;  // day harbour teal (HK Jubuddy)
+      col = mix(col, seaCol, bg * uSeaFill);
+
       // 6. Day↔night re-light axis (same geometry, never a new composition —
       // aesthetic-spec §1 HK-neon / §3). NIGHT: drop the neutral city into a
       // deep-harbour dusk and IGNITE the chroma accents (teal/cinnabar/gold) as
@@ -139,6 +169,29 @@ const SoftStyliseShader = {
         float isAccent = smoothstep(0.22, 0.36, ch) * (1.0 - smoothstep(0.48, 0.64, l));
         vec3 nightCol = mix(dusk, neon, isAccent);
         col = mix(col, nightCol, uNight);
+      }
+
+      // 7. Weather / time-of-day scenarios (Phase B). Mirrors weather_grade.py so
+      // the live render and the baked-image variants read the same look. Streaks
+      // key off gl_FragCoord (screen-space) — seamless within a single live frame;
+      // for SEAMLESS baked scenario maps use weather_grade.py (absolute coords).
+      if (uScenario > 0.5) {
+        float wl = luma(col);
+        if (uScenario < 1.5) {                       // golden-hour
+          vec3 warm = col * vec3(1.14, 1.01, 0.80);
+          col = warm * 0.88 + vec3(1.0, 0.78, 0.43) * ((1.0 - wl) * 0.30);
+          col = (col - 0.5) * 1.08 + 0.5 + 0.015;
+        } else if (uScenario > 2.5 && uScenario < 3.5) {   // rain
+          vec3 gray = mix(vec3(wl), col, 0.45);
+          col = mix(gray * vec3(0.93, 0.97, 1.05), vec3(0.60, 0.64, 0.70), 0.18);
+          float ph = mod(gl_FragCoord.x * 0.5 + gl_FragCoord.y, 7.0) / 7.0;
+          col = (col + clamp(1.0 - ph / 0.18, 0.0, 1.0) * 0.06) * 0.96;
+        } else if (uScenario > 3.5) {                // typhoon
+          vec3 gray = mix(vec3(wl), col, 0.28);
+          col = mix(gray * vec3(0.86, 0.92, 0.88), vec3(0.52, 0.56, 0.57), 0.28) * 0.82;
+          float ph = mod(gl_FragCoord.x * 0.8 + gl_FragCoord.y, 5.0) / 5.0;
+          col = col + clamp(1.0 - ph / 0.30, 0.0, 1.0) * 0.05;
+        }
       }
 
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), src.a);

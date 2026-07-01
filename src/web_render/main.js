@@ -46,10 +46,25 @@ const NIGHT = urlParams.get("night") === "true";
 // vector=true → clean STYLIZED-VECTOR-ILLUSTRATION preset: flatter cel fills,
 // hard palette flats, bold clean outline, no paper grain (graphic map look).
 const VECTOR = urlParams.get("vector") === "true";
+// scenario=golden|rain|typhoon → live weather/time axis (Phase B), the shader
+// counterpart of weather_grade.py + the viewer's scenario switcher. night=true
+// (above) remains the day↔night axis. Only applies under style=soft. The deployed
+// DZI variants are baked seamlessly by weather_grade.py; this is the live path.
+const SCENARIO = urlParams.get("scenario") || "";
+const SCENARIO_ID = { golden: 1, rain: 3, typhoon: 4 }[SCENARIO] || 0;
 // transparent=true → no sky fill; the alpha channel is preserved end-to-end so a
 // tightly-framed landmark bakes as a game-ready PROP SPRITE (the jubuddy-HK
 // identity layer). Screenshot with omit_background to keep the transparency.
 const TRANSPARENT = urlParams.get("transparent") === "true";
+// layer=building|infrastructure|visualisation → which HK Lands Dept 3D tileset.
+// building (default) = 3dsd buildings only; visualisation = the f2 map that bundles
+// terrain + waterbody + vegetation + infrastructure + buildings. See hk_lands_dept.py.
+const LAYER = urlParams.get("layer") || "building";
+const TILESET_PATHS = {
+  building: "3dsd/WGS84/building",
+  infrastructure: "3dsd/WGS84/infrastructure",
+  visualisation: "3dtiles/f2",
+};
 
 // SEAMLESS MAP tiling (Output A). When tile_cols/tile_rows are present, the
 // ortho camera covers the FULL map (lat/lon = map centre, view_height = the
@@ -163,6 +178,11 @@ function init() {
   renderer = new WebGLRenderer({ antialias: true, alpha: TRANSPARENT });
   if (TRANSPARENT) {
     renderer.setClearColor(0x000000, 0); // transparent → prop-sprite alpha
+  } else if (LAYER === "visualisation") {
+    // f2 sea / open areas carry no mesh → fall through to the clear colour. Use a
+    // harbour tone (not sky-blue) so the empty sea blends with f2's real water
+    // texture instead of leaving a cyan seam.
+    renderer.setClearColor(0x35655c); // harbour teal-green (≈ f2 water)
   } else {
     renderer.setClearColor(0x87ceeb); // Sky blue
   }
@@ -208,7 +228,7 @@ function init() {
   // No auth plugin: HK passes the key as a query param (browser-friendly, no
   // preflight). Endpoint mirrors hk_lands_dept.py / central_pilot_fetch.py.
   const HK_TILESET_URL =
-    `https://data.map.gov.hk/api/3d-data/3dsd/WGS84/building/tileset.json?key=${API_KEY}`;
+    `https://data.map.gov.hk/api/3d-data/${TILESET_PATHS[LAYER] || TILESET_PATHS.building}/tileset.json?key=${API_KEY}`;
   tiles = new TilesRenderer(HK_TILESET_URL);
   tiles.registerPlugin(new TileCompressionPlugin());
   // HK b3dm textures are KTX2/BasisU-compressed — without a KTX2 loader every
@@ -234,14 +254,36 @@ function init() {
   // DRACO decoder stays on the CDN path: the HK building tileset is NOT Draco-
   // compressed (b3dm extensionsUsed = ["KHR_texture_basisu"] only), so this
   // loader never actually fetches for these tiles — kept for format-completeness.
-  tiles.registerPlugin(
-    new GLTFExtensionsPlugin({
-      dracoLoader: new DRACOLoader().setDecoderPath(
-        "https://unpkg.com/three@0.181.2/examples/jsm/libs/draco/gltf/"
-      ),
-      ktxLoader,
-    })
-  );
+  const gltfOpts = {
+    dracoLoader: new DRACOLoader().setDecoderPath(
+      "https://unpkg.com/three@0.181.2/examples/jsm/libs/draco/gltf/"
+    ),
+  };
+  // KTX2/BasisU textures for BOTH layers. f2 (visualisation) textures are also
+  // image/ktx2 (its materials are KHR_materials_unlit → flat, lighting-independent)
+  // and they carry the REAL water/terrain/vegetation/facade colour — exactly what we
+  // want. They transcode async, so the bake gives f2 ample --settle-ms before capture.
+  gltfOpts.ktxLoader = ktxLoader;
+  // f2 (visualisation) textures are plain image/ktx2 bufferView images WITHOUT the
+  // KHR_texture_basisu extension, so three.js GLTFLoader routes them to the DEFAULT
+  // image loader (which can't decode ktx2) → "Couldn't load texture blob" and the
+  // mesh renders untextured. This GLTFLoader plugin sends any image/ktx2 source to the
+  // KTX2 loader so f2's REAL textures (vegetation, water, roads, terrain, facades)
+  // actually decode. loadTexture returning a promise overrides the default; returning
+  // null falls through, so the building layer's KHR_texture_basisu path is untouched.
+  const ktx2MimeFallback = (parser) => ({
+    name: "EXT_ktx2_mime_fallback",
+    loadTexture(textureIndex) {
+      const def = parser.json.textures[textureIndex];
+      const src = parser.json.images[def.source];
+      if (!src || (def.extensions && def.extensions.KHR_texture_basisu)) return null;
+      const isKtx2 = src.mimeType === "image/ktx2" || (src.uri && /\.ktx2($|\?)/i.test(src.uri));
+      if (!isKtx2 || !parser.options.ktx2Loader) return null;
+      return parser.loadTextureImage(textureIndex, def.source, parser.options.ktx2Loader);
+    },
+  });
+  gltfOpts.plugins = [ktx2MimeFallback];
+  tiles.registerPlugin(new GLTFExtensionsPlugin(gltfOpts));
 
   // Rotate tiles so Z-up becomes Y-up (Three.js convention)
   tiles.group.rotation.x = -Math.PI / 2;
@@ -310,6 +352,17 @@ function init() {
     if (PIXEL_SIZE !== null) styliseUniforms.uPixelSize.value = PIXEL_SIZE;
     if (PALETTE_MIX !== null) styliseUniforms.uPaletteMix.value = PALETTE_MIX;
     if (NIGHT) styliseUniforms.uNight.value = 1.0;
+    if (SCENARIO_ID) styliseUniforms.uScenario.value = SCENARIO_ID;
+    if (LAYER === "visualisation") {
+      // f2's open sea carries no mesh → falls through to the clear colour; paint it
+      // a soft harbour tone.
+      styliseUniforms.uSeaFill.value = 1.0;
+      // f2 has no vivid colour of its own (muted/flat) — so FULL-snap it to the HK
+      // Jubuddy palette: buildings → soft-stone/charcoal, terrain → parchment, hills
+      // → peak-green, sea → harbour teal. The richer palette gives the snap distinct
+      // targets so the render stops collapsing to a single parchment tone.
+      styliseUniforms.uPaletteMix.value = 0.92;
+    }
     console.log(
       `🎨 soft-stylise enabled (pixel=${styliseUniforms.uPixelSize.value}, ` +
       `palette=${styliseUniforms.uPaletteMix.value})`

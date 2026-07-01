@@ -16,10 +16,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import math
 from pathlib import Path
 
 from PIL import Image
+
+import geo_transform
 
 # Our own stitched territory maps exceed Pillow's default 178M-pixel bomb guard
 # (a 24576×16384 urban-HK stitch is ~402M px). The input is our trusted bake, not
@@ -36,7 +39,8 @@ DZI_XML = (
 
 
 def make_dzi(src: Path, out_base: Path, tile_size: int = 256,
-             overlap: int = 1, fmt: str = "png") -> None:
+             overlap: int = 1, fmt: str = "png",
+             geo_meta: dict | None = None) -> None:
     # Validate params — tile_size is a divisor (ZeroDivisionError if 0) and a
     # negative overlap would invert the crop math.
     if tile_size < 1:
@@ -56,6 +60,22 @@ def make_dzi(src: Path, out_base: Path, tile_size: int = 256,
     out_base.with_suffix(".dzi").write_text(
         DZI_XML.format(ts=tile_size, ov=overlap, fmt=fmt, w=w, h=h)
     )
+
+    # Emit the sibling geotransform manifest (<name>.geo.json) that the living-world
+    # overlay + real-data feed layer use to place actors at real lat/lon. The image
+    # size is only known here (post-Pillow), so this is the natural emission point.
+    if geo_meta:
+        manifest = geo_transform.build_manifest(
+            dzi=out_base.with_suffix(".dzi").name,
+            image_width=w, image_height=h,
+            center_lat=geo_meta["center_lat"], center_lon=geo_meta["center_lon"],
+            view_height_meters=geo_meta["view_height"],
+            azimuth_deg=geo_meta.get("azimuth", geo_transform.DEFAULT_AZIMUTH_DEG),
+            elevation_deg=geo_meta.get("elevation", geo_transform.DEFAULT_ELEVATION_DEG),
+            tile_size=tile_size, overlap=overlap, fmt=fmt,
+        )
+        out_base.with_suffix(".geo.json").write_text(json.dumps(manifest, indent=2))
+        print(f"geo manifest → {out_base.with_suffix('.geo.json')}")
 
     total = 0
     for level in range(max_level, -1, -1):
@@ -86,8 +106,12 @@ def main() -> int:
                     help="output base path (without .dzi), e.g. viewer/central")
     ap.add_argument("--tile-size", type=int, default=256)
     ap.add_argument("--overlap", type=int, default=1)
+    ap.add_argument("--geo-meta", type=str, default=None,
+                    help='JSON: {"center_lat":..,"center_lon":..,"view_height":..,'
+                         '"azimuth":-15,"elevation":-26.565} → emits <out>.geo.json')
     args = ap.parse_args()
-    make_dzi(args.src, args.out, args.tile_size, args.overlap)
+    geo_meta = json.loads(args.geo_meta) if args.geo_meta else None
+    make_dzi(args.src, args.out, args.tile_size, args.overlap, geo_meta=geo_meta)
     return 0
 
 

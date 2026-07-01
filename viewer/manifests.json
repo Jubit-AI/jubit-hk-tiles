@@ -729,8 +729,8 @@
     "schemaVersion": 1,
     "dzi": "territory.dzi",
     "image": {
-      "width": 19200,
-      "height": 7200
+      "width": 32768,
+      "height": 12288
     },
     "tile": {
       "size": 256,

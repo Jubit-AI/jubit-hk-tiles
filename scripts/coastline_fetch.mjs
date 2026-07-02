@@ -30,8 +30,13 @@ function lenM(pts) {
   return m;
 }
 
+const RAW_CACHE = '/tmp/coastline_raw.json';
 let data = null;
-for (const url of MIRRORS) {
+if (fs.existsSync(RAW_CACHE)) {
+  data = JSON.parse(fs.readFileSync(RAW_CACHE, 'utf8'));
+  console.error('using cached raw Overpass response');
+}
+if (!data) for (const url of MIRRORS) {
   try {
     const r = await fetch(url + '?data=' + encodeURIComponent(Q), { headers: HDRS });
     if (r.ok) { data = await r.json(); console.error('OK', url); break; }
@@ -40,9 +45,10 @@ for (const url of MIRRORS) {
   await new Promise((res) => setTimeout(res, 2500));
 }
 if (!data) { console.error('ALL MIRRORS FAILED'); process.exit(1); }
+if (!fs.existsSync(RAW_CACHE)) fs.writeFileSync(RAW_CACHE, JSON.stringify(data));
 
 const rawWays = (data.elements || []).filter((e) => e.type === 'way' && e.geometry);
-const EPS = 0.00035, MIN_LEN = 250;
+const EPS = 0.00007, MIN_LEN = 250; // ~8m: tight enough for HD-district zoom (4px/m)
 let rawV = 0, keptV = 0;
 const ways = [];
 for (const w of rawWays) {

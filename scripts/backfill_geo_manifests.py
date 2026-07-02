@@ -10,15 +10,13 @@ same-origin — no per-file R2 round-trips.
 HD districts are EXACT: every one baked `--viewmap "<lat,lon>,8,6,1500"` → an
 8192×6144 image at azimuth -15°, elevation -26.565° (central_render_bake defaults).
 
-Overview maps: `territory` and `central` are EXACT (params recovered from the bake
-commands — territory from its rebake, central from the documented `--viewmap
-"22.2815,114.160,3,3,1200"` in viewer/README.md). `hk-island-strip` alone stays
-`provisional`: its 6×4 scale-test bake params were never recorded, the tile output
-was cleaned up, and the surviving downscaled sample is too stylised to landmark-fit
-reliably — so rather than fabricate false precision it keeps a best-estimate flagged
-provisional, to be made exact by a re-bake (make_dzi --geo-meta auto-emits the
-manifest). Precision needs scale with zoom; the districts, where you see individual
-streets, are exact.
+Overview maps: ALL EXACT. `territory` and `central` from recovered bake commands
+(territory from its rebake, central from the documented `--viewmap
+"22.2815,114.160,3,3,1200"` in viewer/README.md). `hk-island-strip` was re-baked
+2026-07-02 (its original 6×4 scale-test params were never recorded): first landmark-
+fitted from IFC + Central Pier 7 pixels, then re-baked with those fitted values as
+the new canonical params — exact by construction. Precision needs scale with zoom;
+the districts, where you see individual streets, were always exact.
 """
 from __future__ import annotations
 
@@ -67,11 +65,12 @@ OVERVIEW = {
     # central: EXACT — bake was `--viewmap "22.2815,114.160,3,3,1200"` (viewer/README.md);
     # centre = map centre, vh = full-image view-plane height → 3072×3072 @ vh 1200.
     "central": {"image": (3072, 3072), "center": (22.2815, 114.160), "vh": 1200.0, "provisional": False},
-    # hk-island-strip: LANDMARK-FITTED (its 6×4 bake params were never recorded). Center+vh
-    # solved from IFC + Central Pier 7 pixels measured on the tile (the old provisional vh
-    # 6000 was ~3× too large → everything compressed). Approximate (~80px rms) but aligned;
-    # a re-bake would make it exact (blocked on the HK Lands API key).
-    "hk-island-strip": {"image": (6144, 4096), "center": (22.2820, 114.1720), "vh": 2250.0},
+    # hk-island-strip: EXACT — re-baked 2026-07-02 with the landmark-fitted values as the
+    # new canonical params: `--viewmap "22.2820,114.1720,6,4,2250" --layer visualisation
+    # --style raw` (the same f2 raw look as the live tile; crop verified ≈ identical at
+    # level-10). The original 6×4 scale-test params were never recorded; this bake defines
+    # them. Note the live cute-hk-island-strip predates this re-bake (still the old tile).
+    "hk-island-strip": {"image": (6144, 4096), "center": (22.2820, 114.1720), "vh": 2250.0, "provisional": False},
 }
 
 

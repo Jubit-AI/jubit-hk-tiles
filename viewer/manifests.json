@@ -822,7 +822,6 @@
       114.19414477231064,
       22.30775118365315
     ],
-    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only.",
-    "provisional": true
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
   }
 }

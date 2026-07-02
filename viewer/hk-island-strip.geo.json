@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "dzi": "hk-island-strip.dzi",
+  "image": {
+    "width": 6144,
+    "height": 4096
+  },
+  "tile": {
+    "size": 256,
+    "overlap": 1,
+    "format": "png"
+  },
+  "center": {
+    "lat": 22.282,
+    "lon": 114.172
+  },
+  "projection": {
+    "type": "orthographic-dimetric",
+    "azimuthDeg": -15.0,
+    "elevationDeg": -26.565,
+    "viewHeightMeters": 2250.0,
+    "targetHeightMeters": 5.0,
+    "metersPerDegLat": 111320.0
+  },
+  "bboxOrder": "[w,s,e,n]",
+  "bbox": [
+    114.14985522768936,
+    22.25624881634685,
+    114.19414477231064,
+    22.30775118365315
+  ],
+  "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+}

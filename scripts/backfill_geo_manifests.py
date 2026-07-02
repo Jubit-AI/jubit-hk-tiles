@@ -71,6 +71,17 @@ OVERVIEW = {
     # level-10). The original 6×4 scale-test params were never recorded; this bake defines
     # them. Note the live cute-hk-island-strip predates this re-bake (still the old tile).
     "hk-island-strip": {"image": (6144, 4096), "center": (22.2820, 114.1720), "vh": 2250.0, "provisional": False},
+    # downtown grid cells — the territory map's 3×8 grid (rows A/B/C × cols 1..8), cells
+    # B5..C7 = the HKSAR downtown core (all of HK Island + Kowloon), each re-baked as its
+    # own HD map. EXACT by construction: centres = Newton-inverted territory cell-centre
+    # pixels; vh = 18400·(4096/12288); baked `--viewmap "<c>,12,12,6133.33" --layer
+    # visualisation --style raw` + γ0.78 (2 px/m — the strip family's density).
+    "downtown-b5": {"image": (12288, 12288), "center": (22.3422, 114.0938), "vh": 6133.33, "provisional": False},
+    "downtown-b6": {"image": (12288, 12288), "center": (22.3566, 114.1512), "vh": 6133.33, "provisional": False},
+    "downtown-b7": {"image": (12288, 12288), "center": (22.3711, 114.2087), "vh": 6133.33, "provisional": False},
+    "downtown-c5": {"image": (12288, 12288), "center": (22.2228, 114.1281), "vh": 6133.33, "provisional": False},
+    "downtown-c6": {"image": (12288, 12288), "center": (22.2372, 114.1855), "vh": 6133.33, "provisional": False},
+    "downtown-c7": {"image": (12288, 12288), "center": (22.2517, 114.2430), "vh": 6133.33, "provisional": False},
 }
 
 

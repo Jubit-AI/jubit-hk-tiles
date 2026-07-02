@@ -26,6 +26,8 @@ DEFAULT_MANIFESTS = SCRIPTS.parent / "viewer" / "manifests.json"
 # Maps we place transit on, overview → district (others get no MTR).
 MAPS = [
     "territory.dzi", "hk-island-strip.dzi", "central.dzi",
+    "downtown-b5.dzi", "downtown-b6.dzi", "downtown-b7.dzi",
+    "downtown-c5.dzi", "downtown-c6.dzi", "downtown-c7.dzi",
     "central-hd.dzi", "wan-chai-hd.dzi", "causeway-hd.dzi", "north-point-hd.dzi",
     "kennedy-town-hku-hd.dzi", "tst-hd.dzi", "mongkok-hd.dzi", "sham-shui-po-hd.dzi",
     "kai-tak-hd.dzi", "sha-tin-hd.dzi", "wong-tai-sin-hd.dzi", "aberdeen-hd.dzi",

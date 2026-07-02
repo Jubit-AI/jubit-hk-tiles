@@ -823,5 +823,203 @@
       22.30775118365315
     ],
     "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-b5.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-b5.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.3422,
+      "lon": 114.0938
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.04779359918588,
+      22.275569217690247,
+      114.13980640081412,
+      22.40883078230975
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-b6.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-b6.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.3566,
+      "lon": 114.1512
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.10518884509354,
+      22.28996921769025,
+      114.19721115490647,
+      22.42323078230975
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-b7.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-b7.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.3711,
+      "lon": 114.2087
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.16268405405648,
+      22.304469217690247,
+      114.2547159459435,
+      22.43773078230975
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-c5.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-c5.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.2228,
+      "lon": 114.1281
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.08213286894096,
+      22.15616921769025,
+      114.17406713105905,
+      22.28943078230975
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-c6.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-c6.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.2372,
+      "lon": 114.1855
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.13952814703008,
+      22.17056921769025,
+      114.23147185296993,
+      22.303830782309753
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
+  },
+  "downtown-c7.dzi": {
+    "schemaVersion": 1,
+    "dzi": "downtown-c7.dzi",
+    "image": {
+      "width": 12288,
+      "height": 12288
+    },
+    "tile": {
+      "size": 256,
+      "overlap": 1,
+      "format": "png"
+    },
+    "center": {
+      "lat": 22.2517,
+      "lon": 114.243
+    },
+    "projection": {
+      "type": "orthographic-dimetric",
+      "azimuthDeg": -15.0,
+      "elevationDeg": -26.565,
+      "viewHeightMeters": 6133.33,
+      "targetHeightMeters": 5.0,
+      "metersPerDegLat": 111320.0
+    },
+    "bboxOrder": "[w,s,e,n]",
+    "bbox": [
+      114.19702338841306,
+      22.18506921769025,
+      114.28897661158693,
+      22.31833078230975
+    ],
+    "note": "geo<->image is the dimetric ortho projection (azimuth+elevation foreshortening), NOT a bbox lerp. Use scripts/geo_transform.py / life/geo/project.js. bbox is a bounds hint only."
   }
 }
